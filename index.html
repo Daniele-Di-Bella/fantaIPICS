@@ -64,96 +64,86 @@
   <!-- HEADER -->
   <header class="py-4 border-b border-[#30363d] flex items-center justify-between gap-2 shrink-0">
     <div class="flex items-center gap-2 min-w-0">
-      <span class="text-2xl shrink-0">⚡</span>
+      <span class="text-xl sm:text-2xl shrink-0">⚡</span>
       <div class="min-w-0">
-        <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo</h1>
-        <p class="text-xs text-[#8b949e] font-mono truncate">2026 // developer_league</p>
+        <h1 class="text-sm sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo</h1>
+        <p class="text-[10px] sm:text-xs text-[#8b949e] font-mono truncate">2026 // developer_league</p>
       </div>
     </div>
 
     <!-- Active User Identity Selector & Lock Controls -->
-    <div class="flex items-center gap-2 shrink-0">
-      <div class="flex flex-col items-end gap-1">
-        <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{{ syncStatus }}</span>
-        </div>
-        
-        <!-- Identity Controls (Dropdown + Dedicated Lock Button) -->
-        <div class="flex items-center gap-1.5">
-          <div class="relative">
-            <!-- Custom Identity Dropdown Button -->
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div class="flex items-center gap-1.5">
+        <div class="relative">
+          <!-- Custom Identity Dropdown Button -->
+          <button 
+            @click="toggleIdentityDropdown"
+            :disabled="isIdentityLocked"
+            :class="[
+              'bg-[#161b22] text-white border font-mono text-xs rounded-lg px-2.5 sm:px-3 py-2 outline-none flex items-center gap-1.5 transition shadow-sm touch-target',
+              isIdentityLocked ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-300 font-bold opacity-90 cursor-not-allowed' : 'border-[#30363d] hover:border-emerald-500 focus:border-emerald-500'
+            ]"
+            title="Choose Your Identity"
+          >
+            <span>{{ currentParticipant.emoji }}</span>
+            <span class="font-bold max-w-[70px] sm:max-w-none truncate">{{ currentParticipant.name }}</span>
+            <span class="text-[10px] text-[#8b949e] transition-transform duration-200" :class="{ 'rotate-180': isIdentityDropdownOpen }">▼</span>
+          </button>
+
+          <!-- Custom Dropdown Menu Popup -->
+          <div 
+            v-if="isIdentityDropdownOpen && !isIdentityLocked" 
+            class="absolute right-0 mt-1.5 w-44 sm:w-48 max-w-[80vw] bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl py-1.5 z-50 font-mono text-xs overflow-hidden"
+          >
             <button 
-              @click="toggleIdentityDropdown"
-              :disabled="isIdentityLocked"
+              v-for="p in participants" 
+              :key="p.id" 
+              @click="selectParticipant(p.id)" 
               :class="[
-                'bg-[#161b22] text-white border font-mono text-xs rounded-lg px-3 py-2 outline-none flex items-center gap-2 transition shadow-sm touch-target',
-                isIdentityLocked ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-300 font-bold opacity-90 cursor-not-allowed' : 'border-[#30363d] hover:border-emerald-500 focus:border-emerald-500'
+                'w-full px-3 py-2.5 text-left flex items-center justify-between transition hover:bg-[#21262d]',
+                p.id === selectedParticipantId ? 'bg-[#21262d] text-emerald-400 font-bold' : 'text-white'
               ]"
-              title="Choose Your Identity"
             >
-              <span>{{ currentParticipant.emoji }}</span>
-              <span class="font-bold">{{ currentParticipant.name }}</span>
-              <span class="text-[10px] text-[#8b949e] ml-1 transition-transform duration-200" :class="{ 'rotate-180': isIdentityDropdownOpen }">▼</span>
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="text-sm shrink-0">{{ p.emoji }}</span>
+                <span class="truncate">{{ p.name }}</span>
+              </div>
+              <span v-if="p.id === selectedParticipantId" class="text-xs shrink-0">✓</span>
             </button>
-
-            <!-- Custom Dropdown Menu Popup -->
-            <div 
-              v-if="isIdentityDropdownOpen && !isIdentityLocked" 
-              class="absolute right-0 mt-1.5 w-48 bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl py-1.5 z-50 font-mono text-xs overflow-hidden"
-            >
-              <button 
-                v-for="p in participants" 
-                :key="p.id" 
-                @click="selectParticipant(p.id)" 
-                :class="[
-                  'w-full px-3 py-2.5 text-left flex items-center justify-between transition hover:bg-[#21262d]',
-                  p.id === selectedParticipantId ? 'bg-[#21262d] text-emerald-400 font-bold' : 'text-white'
-                ]"
-              >
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="text-sm shrink-0">{{ p.emoji }}</span>
-                  <span class="truncate">{{ p.name }}</span>
-                </div>
-                <span v-if="p.id === selectedParticipantId" class="text-xs shrink-0">✓</span>
-              </button>
-            </div>
-            
-            <!-- Backdrop Overlay to close menu on click outside -->
-            <div 
-              v-if="isIdentityDropdownOpen" 
-              @click="isIdentityDropdownOpen = false" 
-              class="fixed inset-0 z-40"
-            ></div>
           </div>
-
-          <!-- Lock / Unlock Identity Button -->
-          <button 
-            v-if="!isIdentityLocked"
-            @click="lockIdentity"
-            class="px-2.5 py-2 text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg border border-emerald-500/50 transition shrink-0 flex items-center gap-1 shadow-sm touch-target"
-            title="Lock Player Identity on this device"
-          >
-            <span>Lock Identity</span>
-            <span>🔒</span>
-          </button>
-
-          <button 
-            v-else
-            @click="unlockIdentity"
-            class="px-2 py-2 text-xs font-mono bg-[#21262d] hover:bg-amber-950/80 hover:text-amber-300 text-gray-300 border border-[#30363d] hover:border-amber-700 rounded-lg transition shrink-0 flex items-center gap-1 touch-target"
-            title="Unlock Identity to switch player"
-          >
-            <span class="text-xs">🔒</span>
-            <span class="hidden sm:inline text-[11px]">Unlock</span>
-          </button>
+          
+          <!-- Backdrop Overlay to close menu on click outside -->
+          <div 
+            v-if="isIdentityDropdownOpen" 
+            @click="isIdentityDropdownOpen = false" 
+            class="fixed inset-0 z-40"
+          ></div>
         </div>
+
+        <!-- Sleek Responsive Lock / Unlock Toggle Button -->
+        <button 
+          v-if="!isIdentityLocked"
+          @click="lockIdentity"
+          class="px-2.5 py-2 text-xs font-mono font-bold bg-amber-600 hover:bg-amber-500 text-white rounded-lg border border-amber-500/50 transition shrink-0 flex items-center gap-1 shadow-sm touch-target"
+          title="Lock Player Identity on this device"
+        >
+          <span>🔓</span>
+        </button>
+
+        <button 
+          v-else
+          @click="unlockIdentity"
+          class="px-2.5 py-2 text-xs font-mono bg-emerald-950/80 text-emerald-300 border border-emerald-700/80 hover:bg-amber-950/80 hover:text-amber-300 hover:border-amber-700 rounded-lg transition shrink-0 flex items-center gap-1 touch-target font-bold"
+          title="Identity locked. Click to unlock"
+        >
+          <span>🔒</span>
+        </button>
       </div>
 
       <!-- Manual Sync Button -->
       <button 
         @click="loadFromCloud" 
-        class="p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded-lg hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
+        class="p-2 sm:p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded-lg hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
         title="Manual Cloud Sync"
       >
         🔄
@@ -477,7 +467,7 @@
       <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-xl p-6 max-w-md mx-auto space-y-4 font-mono shadow-xl">
         <div class="text-center space-y-1">
           <span class="text-3xl">🔑</span>
-          <h2 class="text-base font-bold text-white">ADMIN</h2>
+          <h2 class="text-base font-bold text-white">ADMIN CONSOLE</h2>
           <p class="text-xs text-[#8b949e]">Enter passcode to unlock live score editor</p>
         </div>
 
@@ -538,6 +528,28 @@
             <button @click="submitAdminPoints" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition touch-target">
               Push Points to Cloud 🚀
             </button>
+          </div>
+
+          <!-- Passcode Management Section -->
+          <div class="pt-4 border-t border-[#30363d] space-y-2 font-mono">
+            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>🔐</span> Update Admin Passcode
+            </label>
+            <div class="flex gap-2">
+              <input 
+                v-model="newAdminPasscode" 
+                type="text" 
+                placeholder="New passcode (e.g. 5678)" 
+                class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white text-xs outline-none focus:border-emerald-500"
+              >
+              <button 
+                @click="updatePasscode" 
+                class="px-4 py-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] hover:border-emerald-500 text-white text-xs rounded-lg font-bold transition shrink-0"
+              >
+                Save Passcode
+              </button>
+            </div>
+            <p class="text-[11px] text-[#8b949e]">Default passcode is <code class="text-amber-300">1234</code>. Passcode changes are saved locally to this device.</p>
           </div>
         </div>
 
@@ -605,9 +617,11 @@
       const isIdentityLocked = ref(false);
       const isIdentityDropdownOpen = ref(false);
 
-      // Admin state
+      // Admin state & Passcode
+      const currentAdminPasscode = ref(localStorage.getItem('fanta_admin_pin') || 'carota');
       const isAdminAuthenticated = ref(false);
       const adminPinInput = ref('');
+      const newAdminPasscode = ref('');
       const adminSelectedArtistId = ref(1);
       const adminPointsDelta = ref(15);
       const adminEventNote = ref('Outfit in Total Black');
@@ -833,13 +847,22 @@
       };
 
       const authenticateAdmin = () => {
-        if (adminPinInput.value === '1234') {
+        if (adminPinInput.value === currentAdminPasscode.value) {
           isAdminAuthenticated.value = true;
           adminPinInput.value = '';
         } else {
           adminToastMessage.value = 'Incorrect admin passcode!';
           setTimeout(() => adminToastMessage.value = '', 3000);
         }
+      };
+
+      const updatePasscode = () => {
+        if (!newAdminPasscode.value.trim()) return;
+        currentAdminPasscode.value = newAdminPasscode.value.trim();
+        localStorage.setItem('fanta_admin_pin', currentAdminPasscode.value);
+        newAdminPasscode.value = '';
+        adminToastMessage.value = 'Admin passcode successfully updated!';
+        setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
       const submitAdminPoints = async () => {
@@ -937,8 +960,8 @@
         rankedParticipants, filteredRules, ruleFilter, ruleSearchQuery,
         isArtistSelected, cannotSelect, toggleArtist, showLockModal, openLockModal,
         confirmAndSaveLock, getParticipantScore, getArtistName, getArtistPrice,
-        isAdminAuthenticated, adminPinInput, adminSelectedArtistId, adminPointsDelta,
-        adminEventNote, adminToastMessage, authenticateAdmin, submitAdminPoints,
+        isAdminAuthenticated, adminPinInput, newAdminPasscode, adminSelectedArtistId, adminPointsDelta,
+        adminEventNote, adminToastMessage, authenticateAdmin, updatePasscode, submitAdminPoints,
         loadFromCloud
       };
     }
