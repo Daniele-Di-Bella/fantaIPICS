@@ -46,11 +46,10 @@
       min-height: 44px;
       min-width: 44px;
     }
-    /* Hide scrollbars for clean tab bar horizontal scrolling */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Explicit dark options styling for mobile OS native popups */
+    /* Force dark popups for native select element options on all OS dropdowns */
     select option {
       background-color: #161b22 !important;
       color: #ffffff !important;
@@ -67,11 +66,11 @@
       <span class="text-xl shrink-0">⚡</span>
       <div class="min-w-0">
         <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo</h1>
-        <p class="text-xs text-[#8b949e] font-mono truncate">2026 // synchronized_league</p>
+        <p class="text-xs text-[#8b949e] font-mono truncate">2026 // developer_league</p>
       </div>
     </div>
 
-    <!-- Active User Dropdown & Sync Indicator -->
+    <!-- Active User Selector & Live Sync Button -->
     <div class="flex items-center gap-2 shrink-0">
       <div class="flex flex-col items-end">
         <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-0.5">
@@ -79,15 +78,20 @@
           <span>{{ syncStatus }}</span>
         </div>
         
-        <!-- User Selection Dropdown with explicit dark styling -->
+        <!-- User Identity Select Dropdown -->
         <div class="relative">
           <select 
             v-model.number="selectedParticipantId" 
             @change="onUserChange" 
             class="bg-[#161b22] text-white border border-[#30363d] font-mono text-xs rounded-lg px-2.5 py-1.5 focus:border-emerald-500 outline-none cursor-pointer hover:border-emerald-500/50 transition appearance-none pr-7 shadow-sm"
-            title="Select Your Identity"
+            title="Choose Your Identity"
           >
-            <option v-for="p in participants" :key="p.id" :value="p.id" class="bg-[#161b22] text-white py-1">
+            <option 
+              v-for="p in participants" 
+              :key="p.id" 
+              :value="p.id" 
+              class="bg-[#161b22] text-white py-1"
+            >
               {{ p.emoji }} {{ p.name }}
             </option>
           </select>
@@ -95,17 +99,18 @@
         </div>
       </div>
 
+      <!-- Manual Sync Button -->
       <button 
         @click="loadFromCloud" 
         class="p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded-lg hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
-        title="Manual Sync"
+        title="Manual Cloud Sync"
       >
         🔄
       </button>
     </div>
   </header>
 
-  <!-- NAVIGATION TABS (No File Suffixes) -->
+  <!-- NAVIGATION TABS (Strictly Clean Titles) -->
   <nav class="flex overflow-x-auto no-scrollbar gap-1.5 py-3 border-b border-[#30363d] shrink-0 font-mono text-xs">
     <button 
       v-for="tab in tabs" 
@@ -123,7 +128,7 @@
     </button>
   </nav>
 
-  <!-- MAIN CONTENT AREA -->
+  <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 py-4 space-y-6">
 
     <!-- VIEW 1: README -->
@@ -133,147 +138,152 @@
           <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
             <span>📄</span> README
           </h2>
-          <span class="text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-full font-bold">PUBLIC RULES</span>
+          <span class="text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-full font-bold">LEAGUE RULES</span>
         </div>
 
         <p class="text-sm text-[#8b949e] leading-relaxed">
-          Welcome to the developer edition of <strong class="text-white">FantaSanRemo 2026</strong>. Pick your identity from the upper right dropdown, draft your top 3 artists, manage your virtual Giuliani budget, and track scores live!
+          Welcome to <strong class="text-white">FantaSanRemo 2026 Developer League</strong>. Select your player identity in the top right header, pick between 1 and 3 artists within your 30 Giuliani budget, seal your roster, and track the live points!
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
             <div class="text-xs font-mono text-emerald-400 font-bold">01. BUDGET</div>
             <div class="text-xl font-bold font-mono text-white mt-0.5">30 Giuliani</div>
-            <div class="text-[11px] text-[#8b949e] mt-0.5">Virtual currency limit</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">Maximum spending limit</div>
           </div>
           <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
-            <div class="text-xs font-mono text-emerald-400 font-bold">02. CAPACITY</div>
-            <div class="text-xl font-bold font-mono text-white mt-0.5">Max 3 Artists</div>
-            <div class="text-[11px] text-[#8b949e] mt-0.5">Locked upon confirmation</div>
+            <div class="text-xs font-mono text-emerald-400 font-bold">02. ROSTER SIZE</div>
+            <div class="text-xl font-bold font-mono text-white mt-0.5">1 to 3 Artists</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">No requirement to pick 3</div>
           </div>
           <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
-            <div class="text-xs font-mono text-emerald-400 font-bold">03. PRIVACY</div>
-            <div class="text-xl font-bold font-mono text-white mt-0.5">Secret Rosters</div>
-            <div class="text-[11px] text-[#8b949e] mt-0.5">Drafts stay hidden</div>
-          </div>
-        </div>
-
-        <div class="space-y-2 pt-2">
-          <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Price Categories</h3>
-          <div class="grid grid-cols-3 gap-2.5 text-xs font-mono">
-            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
-              <span class="text-amber-400 font-bold">Cat 1</span>: 16G
-            </div>
-            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
-              <span class="text-sky-400 font-bold">Cat 2</span>: 10G
-            </div>
-            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
-              <span class="text-emerald-400 font-bold">Cat 3</span>: 4G
-            </div>
+            <div class="text-xs font-mono text-emerald-400 font-bold">03. SYNCHRONIZED</div>
+            <div class="text-xl font-bold font-mono text-white mt-0.5">Live Sync</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">Real-time cloud database</div>
           </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2.5 pt-3">
           <button @click="activeTab = 'draft'" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold rounded-lg text-xs transition shadow-sm touch-target">
-            Start Drafting ➔
+            Go To Roster Draft ➔
           </button>
           <button @click="activeTab = 'leaderboard'" class="flex-1 py-3 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded-lg text-xs border border-[#30363d] transition touch-target">
-            View Standings ➔
+            View Leaderboard ➔
           </button>
           <button @click="activeTab = 'lists'" class="flex-1 py-3 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded-lg text-xs border border-[#30363d] transition touch-target">
-            Bonus & Malus ➔
+            Bonus & Malus List ➔
           </button>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 2: ROSTER DRAFT -->
-    <section v-if="activeTab === 'draft'" class="space-y-4">
+    <!-- VIEW 2: ROSTER (CATEGORIZED BY GIULIANI VALUE) -->
+    <section v-if="activeTab === 'draft'" class="space-y-5">
       
-      <!-- Budget Bar & Active Player Status (Sticky Header) -->
+      <!-- Sticky Budget Header Bar -->
       <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 sm:p-4 shadow-2xl space-y-3 backdrop-blur">
         <div class="flex items-center justify-between gap-2 border-b border-[#30363d] pb-2.5">
           <div class="flex items-center gap-2">
-            <span class="text-xs font-mono text-[#8b949e]">Active Player:</span>
+            <span class="text-xs font-mono text-[#8b949e]">Player Identity:</span>
             <span class="text-xs font-mono font-bold text-white bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] flex items-center gap-1.5">
               <span>{{ currentParticipant.emoji }}</span>
               <span>{{ currentParticipant.name }}</span>
             </span>
           </div>
           <div class="text-xs font-mono flex items-center gap-2">
-            <span class="hidden sm:inline">Status:</span>
-            <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">🔒 LOCKED</span>
+            <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">🔒 ROSTER SEALED</span>
             <span v-else class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-md">✏️ DRAFTING</span>
           </div>
         </div>
 
-        <!-- Budget Progress -->
+        <!-- Budget & Selection Statistics -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
           <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
             <div class="text-[10px] text-[#8b949e]">Budget Spent</div>
             <div class="font-bold text-white text-sm">{{ currentSpentBudget }} / 30 G</div>
           </div>
           <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
-            <div class="text-[10px] text-[#8b949e]">Remaining</div>
+            <div class="text-[10px] text-[#8b949e]">Budget Remaining</div>
             <div class="font-bold text-emerald-400 text-sm">{{ 30 - currentSpentBudget }} G</div>
           </div>
           <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
-            <div class="text-[10px] text-[#8b949e]">Roster Size</div>
+            <div class="text-[10px] text-[#8b949e]">Selected Artists</div>
             <div class="font-bold text-white text-sm">{{ (currentParticipant?.roster || []).length }} / 3</div>
           </div>
           <div class="flex items-center">
             <button 
               @click="openLockModal"
-              :disabled="currentParticipant.isLocked || (currentParticipant?.roster || []).length === 0"
+              :disabled="currentParticipant.isLocked || (currentParticipant?.roster || []).length < 1"
               class="w-full h-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262d] disabled:text-gray-500 text-white font-mono font-bold rounded-lg text-xs transition border border-emerald-500/30 disabled:border-[#30363d] touch-target"
             >
-              {{ currentParticipant.isLocked ? 'Roster Sealed' : 'Lock Roster 🔒' }}
+              {{ currentParticipant.isLocked ? 'Roster Sealed 🔒' : 'Lock Roster 🔒' }}
             </button>
           </div>
         </div>
+        
+        <p class="text-[11px] font-mono text-[#8b949e] italic">
+          💡 Note: A roster can contain 1, 2, or 3 artists. You are not required to select 3 artists or spend all 30 Giuliani.
+        </p>
       </div>
 
-      <!-- Locked Warning Banner -->
+      <!-- Locked Banner -->
       <div v-if="currentParticipant.isLocked" class="bg-amber-950/30 border border-amber-800/60 text-amber-300 p-3.5 rounded-lg text-xs font-mono flex items-center gap-2.5">
         <span class="text-lg">🔒</span>
-        <span>Your roster has been confirmed and locked. It is saved in the cloud and cannot be modified.</span>
+        <span>Your roster has been confirmed and locked. It is saved in the live database and cannot be modified.</span>
       </div>
 
-      <!-- Artist List -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div 
-          v-for="artist in artists" 
-          :key="artist.id"
-          :class="[
-            'p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3',
-            isArtistSelected(artist.id) 
-              ? 'bg-emerald-950/20 border-emerald-500 shadow-sm' 
-              : 'bg-[#161b22] border-[#30363d]'
-          ]"
-        >
-          <div class="min-w-0">
-            <div class="font-mono text-sm font-bold text-white truncate">{{ artist.name }}</div>
-            <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-1">
-              <span :class="getCategoryColor(artist.category)">Cat {{ artist.category }}</span>
-              <span>•</span>
-              <span class="text-white font-bold">{{ artist.price }} Giuliani</span>
-            </div>
+      <!-- ARTIST SELECTION GROUPED BY GIULIANI TIERS -->
+      <div v-for="catGroup in artistCategories" :key="catGroup.category" class="space-y-3">
+        
+        <!-- Category Banner -->
+        <div class="flex items-center justify-between bg-[#161b22] px-4 py-2.5 rounded-xl border border-[#30363d] font-mono">
+          <div class="flex items-center gap-2">
+            <span :class="catGroup.badgeClass" class="px-2.5 py-0.5 rounded text-xs font-bold border">
+              Category {{ catGroup.category }}
+            </span>
+            <span class="text-xs text-white font-bold">{{ catGroup.title }}</span>
           </div>
+          <span class="text-xs font-bold text-emerald-400">{{ catGroup.price }} Giuliani</span>
+        </div>
 
-          <button 
-            @click="toggleArtist(artist)"
-            :disabled="currentParticipant.isLocked || (!isArtistSelected(artist.id) && cannotSelect(artist))"
+        <!-- Category Artist Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div 
+            v-for="artist in catGroup.artists" 
+            :key="artist.id"
             :class="[
-              'px-3.5 py-2 rounded-lg font-mono text-xs font-bold transition touch-target shrink-0',
-              isArtistSelected(artist.id)
-                ? 'bg-red-950 text-red-400 border border-red-800 hover:bg-red-900'
-                : 'bg-[#21262d] text-white border border-[#30363d] hover:border-emerald-500 disabled:opacity-30 disabled:hover:border-[#30363d]'
+              'p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3',
+              isArtistSelected(artist.id) 
+                ? 'bg-emerald-950/30 border-emerald-500 shadow-sm' 
+                : 'bg-[#161b22] border-[#30363d]'
             ]"
           >
-            {{ isArtistSelected(artist.id) ? 'Remove' : 'Select' }}
-          </button>
+            <div class="min-w-0">
+              <div class="font-mono text-sm font-bold text-white truncate">{{ artist.name }}</div>
+              <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-1">
+                <span>Value: <strong class="text-white">{{ artist.price }} Giuliani</strong></span>
+                <span>•</span>
+                <span class="text-emerald-400 font-bold">{{ artist.points }} pts</span>
+              </div>
+            </div>
+
+            <button 
+              @click="toggleArtist(artist)"
+              :disabled="currentParticipant.isLocked || (!isArtistSelected(artist.id) && cannotSelect(artist))"
+              :class="[
+                'px-3.5 py-2 rounded-lg font-mono text-xs font-bold transition touch-target shrink-0',
+                isArtistSelected(artist.id)
+                  ? 'bg-red-950 text-red-400 border border-red-800 hover:bg-red-900'
+                  : 'bg-[#21262d] text-white border border-[#30363d] hover:border-emerald-500 disabled:opacity-30 disabled:hover:border-[#30363d]'
+              ]"
+            >
+              {{ isArtistSelected(artist.id) ? 'Remove' : 'Select' }}
+            </button>
+          </div>
         </div>
+
       </div>
+
     </section>
 
     <!-- VIEW 3: LEADERBOARD -->
@@ -283,7 +293,7 @@
           <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
             <span>📊</span> Leaderboard
           </h2>
-          <span class="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800 font-bold">REALTIME CALCULATED</span>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800 font-bold">LIVE STANDINGS</span>
         </div>
 
         <div class="space-y-2.5">
@@ -314,33 +324,9 @@
       </div>
     </section>
 
-    <!-- VIEW 4: LISTS (BONUS / MALUS & GIULIANI VALUES) -->
-    <section v-if="activeTab === 'lists'" class="space-y-6">
-      
-      <!-- Sub Tab Toggle -->
-      <div class="flex bg-[#161b22] p-1 border border-[#30363d] rounded-xl font-mono text-xs">
-        <button 
-          @click="listsSubTab = 'rules'" 
-          :class="[
-            'flex-1 py-2 rounded-lg font-bold transition',
-            listsSubTab === 'rules' ? 'bg-[#21262d] text-white border border-emerald-500/40' : 'text-[#8b949e] hover:text-white'
-          ]"
-        >
-          🎁 Bonus & Malus
-        </button>
-        <button 
-          @click="listsSubTab = 'giuliani'" 
-          :class="[
-            'flex-1 py-2 rounded-lg font-bold transition',
-            listsSubTab === 'giuliani' ? 'bg-[#21262d] text-white border border-emerald-500/40' : 'text-[#8b949e] hover:text-white'
-          ]"
-        >
-          🏷️ Artist Giuliani Values
-        </button>
-      </div>
-
-      <!-- SUBTAB A: BONUS & MALUS CATALOG -->
-      <div v-if="listsSubTab === 'rules'" class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+    <!-- VIEW 4: LISTS (BONUS & MALUS CATALOG) -->
+    <section v-if="activeTab === 'lists'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#30363d] pb-3">
           <div>
             <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -349,7 +335,7 @@
             <p class="text-xs text-[#8b949e]">Official point triggers for FantaSanRemo 2026</p>
           </div>
 
-          <!-- Filter Pills -->
+          <!-- Type Filter -->
           <div class="flex gap-1 bg-[#0d1117] p-1 rounded-lg border border-[#30363d] text-xs">
             <button @click="ruleFilter = 'all'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'all' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">All</button>
             <button @click="ruleFilter = 'bonus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'bonus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Bonuses (+)</button>
@@ -357,15 +343,15 @@
           </div>
         </div>
 
-        <!-- Search Input -->
+        <!-- Search Bar -->
         <input 
           v-model="ruleSearchQuery" 
           type="text" 
-          placeholder="🔍 Search action (e.g., outfit, flowers, stairs)..." 
+          placeholder="🔍 Search rule (e.g. flowers, total black, stairs)..." 
           class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-xs text-white focus:border-emerald-500 outline-none"
         >
 
-        <!-- Rules List -->
+        <!-- Rule List -->
         <div class="space-y-2">
           <div 
             v-for="(rule, idx) in filteredRules" 
@@ -383,46 +369,9 @@
               {{ rule.points > 0 ? '+' + rule.points : rule.points }} pts
             </span>
           </div>
-          <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-4">
-            No bonus or malus rules match your search query.
-          </div>
-        </div>
-      </div>
 
-      <!-- SUBTAB B: ARTISTS GIULIANI VALUE RANKING -->
-      <div v-if="listsSubTab === 'giuliani'" class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
-        <div class="border-b border-[#30363d] pb-3">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <span>🏷️</span> Artist Giuliani Value Ranking
-          </h2>
-          <p class="text-xs text-[#8b949e]">Ordered by price category and current points scored</p>
-        </div>
-
-        <div class="space-y-2.5">
-          <div 
-            v-for="artist in sortedArtistsByPrice" 
-            :key="artist.id" 
-            class="p-3.5 bg-[#0d1117] border border-[#30363d] rounded-xl flex items-center justify-between gap-3 text-xs"
-          >
-            <div class="flex items-center gap-3 min-w-0">
-              <span :class="[
-                'px-2 py-1 rounded font-bold text-[10px] shrink-0',
-                artist.category === 1 ? 'bg-amber-950 text-amber-400 border border-amber-800' :
-                artist.category === 2 ? 'bg-sky-950 text-sky-400 border border-sky-800' :
-                'bg-emerald-950 text-emerald-400 border border-emerald-800'
-              ]">
-                CAT {{ artist.category }}
-              </span>
-              <div class="min-w-0">
-                <div class="text-sm font-bold text-white truncate">{{ artist.name }}</div>
-                <div class="text-[11px] text-[#8b949e]">Price: <strong class="text-white">{{ artist.price }} Giuliani</strong></div>
-              </div>
-            </div>
-
-            <div class="text-right shrink-0">
-              <div class="text-xs text-[#8b949e]">Score</div>
-              <div class="text-sm font-bold text-emerald-400">{{ artist.points }} pts</div>
-            </div>
+          <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-6">
+            No bonus or malus rules match your search.
           </div>
         </div>
       </div>
@@ -435,8 +384,8 @@
       <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-xl p-6 max-w-md mx-auto space-y-4 font-mono shadow-xl">
         <div class="text-center space-y-1">
           <span class="text-3xl">🔑</span>
-          <h2 class="text-base font-bold text-white">Admin Authentication</h2>
-          <p class="text-xs text-[#8b949e]">Enter passcode to unlock score management</p>
+          <h2 class="text-base font-bold text-white">Admin Lock</h2>
+          <p class="text-xs text-[#8b949e]">Enter passcode to unlock live score editor</p>
         </div>
 
         <input 
@@ -452,7 +401,7 @@
         </button>
       </div>
 
-      <!-- Authenticated Admin Console -->
+      <!-- Authenticated Console -->
       <div v-else class="space-y-4">
         <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
@@ -462,7 +411,7 @@
             <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
           </div>
 
-          <!-- Toast Message Notification -->
+          <!-- Admin Toast Notification -->
           <div v-if="adminToastMessage" class="p-3 bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-mono rounded-lg transition">
             {{ adminToastMessage }}
           </div>
@@ -489,7 +438,7 @@
             </div>
 
             <div>
-              <label class="text-xs text-[#8b949e]">Reason / Event Note:</label>
+              <label class="text-xs text-[#8b949e]">Reason / Trigger Note:</label>
               <input v-model="adminEventNote" type="text" placeholder="e.g., Total black outfit bonus" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs outline-none focus:border-emerald-500">
             </div>
 
@@ -518,7 +467,7 @@
     <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
       <div class="text-center space-y-1">
         <span class="text-3xl">⚠️</span>
-        <h3 class="text-base font-bold text-white">Permanent Confirmation</h3>
+        <h3 class="text-base font-bold text-white">Seal Roster Selection</h3>
         <p class="text-xs text-[#8b949e]">Once confirmed, your roster will be permanently locked and saved to the cloud.</p>
       </div>
 
@@ -530,13 +479,12 @@
 
       <div class="flex gap-2">
         <button @click="showLockModal = false" class="flex-1 py-2.5 bg-[#21262d] text-white rounded-lg text-xs border border-[#30363d] touch-target">Cancel</button>
-        <button @click="confirmAndSaveLock" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs touch-target">Confirm & Lock</button>
+        <button @click="confirmAndSaveLock" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs touch-target">Confirm & Seal</button>
       </div>
     </div>
   </div>
 
 </div>
-
 
 <script>
   const { createApp, ref, computed, onMounted } = Vue;
@@ -550,7 +498,6 @@
 
       // Navigation & State
       const activeTab = ref('readme');
-      const listsSubTab = ref('rules');
       const syncStatus = ref('Synced');
       const showLockModal = ref(false);
       const isAdminAuthenticated = ref(false);
@@ -564,16 +511,16 @@
       const ruleFilter = ref('all');
       const ruleSearchQuery = ref('');
 
-      // Navigation Clean Tabs (No File Suffixes)
+      // Strictly Clean Navigation Tabs (No File Extensions)
       const tabs = [
         { id: 'readme', label: 'README', icon: '📄' },
         { id: 'draft', label: 'ROSTER', icon: '✏️' },
         { id: 'leaderboard', label: 'LEADERBOARD', icon: '📊' },
-        { id: 'lists', label: 'LISTS', icon: '📋' },
+        { id: 'lists', label: 'LISTS', icon: '📜' },
         { id: 'admin', label: 'ADMIN', icon: '🎛️' }
       ];
 
-      // Default Seed Data
+      // Default Seed Artists
       const artists = ref([
         { id: 1, name: "Annalisa", category: 1, price: 16, points: 0 },
         { id: 2, name: "Geolier", category: 1, price: 16, points: 0 },
@@ -587,6 +534,7 @@
         { id: 10, name: "Alfa", category: 3, price: 4, points: 0 }
       ]);
 
+      // Seed League Participants
       const participants = ref([
         { id: 101, name: "Matteo", emoji: "👾", roster: [], isLocked: false },
         { id: 102, name: "Sofia", emoji: "🚀", roster: [], isLocked: false },
@@ -624,10 +572,10 @@
 
       // Save user selection to localStorage
       const onUserChange = () => {
-        localStorage.setItem('fanta_user_id', selectedParticipantId.value);
+        localStorage.setItem('fanta_user_id', String(selectedParticipantId.value));
       };
 
-      // Computed Properties with Strict Null & Undefined Guards
+      // Computed Current Participant
       const currentParticipant = computed(() => {
         let p = participants.value.find(item => Number(item.id) === Number(selectedParticipantId.value));
         if (!p) p = participants.value[0];
@@ -636,6 +584,33 @@
         }
         if (!Array.isArray(p.roster)) p.roster = [];
         return p;
+      });
+
+      // Artists categorized into Giuliani Groups
+      const artistCategories = computed(() => {
+        return [
+          {
+            category: 1,
+            title: "Superstars / Top Tier",
+            price: 16,
+            badgeClass: "bg-amber-950 text-amber-400 border-amber-800",
+            artists: artists.value.filter(a => a.category === 1)
+          },
+          {
+            category: 2,
+            title: "Mid Tier",
+            price: 10,
+            badgeClass: "bg-sky-950 text-sky-400 border-sky-800",
+            artists: artists.value.filter(a => a.category === 2)
+          },
+          {
+            category: 3,
+            title: "Budget Tier",
+            price: 4,
+            badgeClass: "bg-emerald-950 text-emerald-400 border-emerald-800",
+            artists: artists.value.filter(a => a.category === 3)
+          }
+        ];
       });
 
       const currentSpentBudget = computed(() => {
@@ -650,19 +625,10 @@
         return [...participants.value].sort((a, b) => getParticipantScore(b) - getParticipantScore(a));
       });
 
-      const sortedArtistsByPrice = computed(() => {
-        return [...artists.value].sort((a, b) => {
-          if (a.category !== b.category) return a.category - b.category;
-          return b.points - a.points;
-        });
-      });
-
       const filteredRules = computed(() => {
         return bonusMalusRules.value.filter(r => {
-          // Type filter
           if (ruleFilter.value === 'bonus' && r.points <= 0) return false;
           if (ruleFilter.value === 'malus' && r.points >= 0) return false;
-          // Search filter
           if (ruleSearchQuery.value.trim() !== '') {
             const query = ruleSearchQuery.value.toLowerCase();
             return r.action.toLowerCase().includes(query);
@@ -671,7 +637,7 @@
         });
       });
 
-      // Roster & Selection Logic
+      // Roster Selection Helpers
       const isArtistSelected = (artistId) => {
         const roster = currentParticipant.value?.roster || [];
         return roster.includes(artistId);
@@ -694,13 +660,14 @@
         } else if (!cannotSelect(artist)) {
           roster.push(artist.id);
         }
-        // Save immediately so auto-polling background fetches won't overwrite selections
         await saveToCloud();
       };
 
       const openLockModal = () => {
         const roster = currentParticipant.value?.roster || [];
-        if (roster.length > 0) showLockModal.value = true;
+        if (roster.length >= 1 && roster.length <= 3) {
+          showLockModal.value = true;
+        }
       };
 
       const confirmAndSaveLock = async () => {
@@ -720,12 +687,6 @@
       const getArtistName = (id) => {
         const a = artists.value.find(art => art.id === id);
         return a ? a.name : 'Unknown';
-      };
-
-      const getCategoryColor = (cat) => {
-        if (cat === 1) return 'text-amber-400 font-bold';
-        if (cat === 2) return 'text-sky-400 font-bold';
-        return 'text-emerald-400 font-bold';
       };
 
       const authenticateAdmin = () => {
@@ -751,15 +712,12 @@
         });
 
         await saveToCloud();
-        adminToastMessage.value = `Successfully updated ${artist.name} by ${adminPointsDelta.value > 0 ? '+' : ''}${adminPointsDelta.value} pts!`;
+        adminToastMessage.value = `Updated ${artist.name} by ${adminPointsDelta.value > 0 ? '+' : ''}${adminPointsDelta.value} pts!`;
         setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
-      // -----------------------------------------------------------------
-      // JSONBIN API FUNCTIONS
-      // -----------------------------------------------------------------
+      // JSONBIN API SYNC FUNCTIONS
       const loadFromCloud = async () => {
-        if (BIN_ID === "YOUR_BIN_ID_HERE") return;
         syncStatus.value = 'Syncing...';
         try {
           const res = await fetch(`${BASE_URL}/latest`, {
@@ -769,7 +727,6 @@
           if (data.record && data.record.artists) {
             artists.value = data.record.artists;
             
-            // Map participants safely preserving array types
             if (Array.isArray(data.record.participants)) {
               participants.value = data.record.participants.map(p => ({
                 ...p,
@@ -786,7 +743,6 @@
       };
 
       const saveToCloud = async () => {
-        if (BIN_ID === "YOUR_BIN_ID_HERE") return;
         syncStatus.value = 'Saving...';
         try {
           await fetch(BASE_URL, {
@@ -809,21 +765,21 @@
       };
 
       onMounted(() => {
-        // Restore user identity selection from LocalStorage
+        // Restore active user selection from localStorage
         const savedUserId = localStorage.getItem('fanta_user_id');
         if (savedUserId) {
           selectedParticipantId.value = Number(savedUserId);
         }
         loadFromCloud();
-        setInterval(loadFromCloud, 10000); // 10s cloud polling
+        setInterval(loadFromCloud, 10000); // Poll cloud every 10 seconds
       });
 
       return {
-        activeTab, listsSubTab, tabs, syncStatus, artists, participants, auditLog,
-        selectedParticipantId, currentParticipant, currentSpentBudget,
-        rankedParticipants, sortedArtistsByPrice, filteredRules, ruleFilter, ruleSearchQuery,
+        activeTab, tabs, syncStatus, artists, participants, auditLog,
+        selectedParticipantId, currentParticipant, artistCategories, currentSpentBudget,
+        rankedParticipants, filteredRules, ruleFilter, ruleSearchQuery,
         isArtistSelected, cannotSelect, toggleArtist, showLockModal, openLockModal,
-        confirmAndSaveLock, getParticipantScore, getArtistName, getCategoryColor,
+        confirmAndSaveLock, getParticipantScore, getArtistName,
         isAdminAuthenticated, adminPinInput, adminSelectedArtistId, adminPointsDelta,
         adminEventNote, adminToastMessage, authenticateAdmin, submitAdminPoints,
         loadFromCloud, onUserChange
