@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FantaSanRemo // Developer League Dashboard</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0d1117',
+              card: '#161b22',
+              border: '#30363d',
+              accent: '#10b981',
+              muted: '#8b949e',
+              text: '#c9d1d9'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <style>
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    input, select, button {
+      font-size: 16px !important; /* Prevents iOS auto-zoom on input focus */
+    }
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    /* Hide scrollbars for clean tab bar horizontal scrolling */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="h-full bg-[#0d1117] text-[#c9d1d9] antialiased">
+
+<div id="app" class="min-h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-6">
+
+  <!-- HEADER -->
+  <header class="py-4 border-b border-[#30363d] flex items-center justify-between gap-2 shrink-0">
+    <div class="flex items-center gap-2 min-w-0">
+      <span class="text-xl shrink-0">⚡</span>
+      <div class="min-w-0">
+        <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo.v2</h1>
+        <p class="text-xs text-[#8b949e] font-mono truncate">v2026.1 // synchronized_league</p>
+      </div>
+    </div>
+
+    <!-- Sync Indicator & Active User -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="text-right hidden sm:block">
+        <div class="text-xs font-mono text-emerald-400 flex items-center justify-end gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> {{ syncStatus }}
+        </div>
+        <div class="text-[10px] text-[#8b949e] font-mono">User: {{ currentParticipant.name }}</div>
+      </div>
+
+      <button @click="loadFromCloud" class="p-2 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded hover:border-emerald-500 text-gray-300 transition shrink-0" title="Manual Sync">
+        🔄
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="flex overflow-x-auto no-scrollbar gap-1 py-3 border-b border-[#30363d] shrink-0 font-mono text-xs">
+    <button 
+      v-for="tab in tabs" 
+      :key="tab.id"
+      @click="activeTab = tab.id"
+      :class="[
+        'px-3 py-2 rounded border transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 touch-target',
+        activeTab === tab.id 
+          ? 'bg-[#21262d] text-white border-emerald-500 font-semibold' 
+          : 'bg-[#161b22] text-[#8b949e] border-[#30363d] hover:text-white'
+      ]"
+    >
+      <span>{{ tab.icon }}</span>
+      <span class="sm:hidden">{{ tab.shortLabel }}</span>
+      <span class="hidden sm:inline">{{ tab.label }}</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 py-4 space-y-6">
+
+    <!-- VIEW 1: WELCOME / README -->
+    <section v-if="activeTab === 'readme'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
+            <span>📄</span> README.md
+          </h2>
+          <span class="text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded">PUBLIC_RULES</span>
+        </div>
+
+        <p class="text-sm text-[#8b949e] leading-relaxed">
+          Welcome to the developer edition of <strong class="text-white">FantaSanRemo 2026</strong>. Draft your top 3 artists, manage your virtual Giuliani budget, and climb the live leaderboard during the festival nights.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400">01. BUDGET</div>
+            <div class="text-lg font-bold font-mono text-white">30 Giuliani</div>
+            <div class="text-[11px] text-[#8b949e]">Virtual currency limit</div>
+          </div>
+          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400">02. CAPACITY</div>
+            <div class="text-lg font-bold font-mono text-white">Max 3 Artists</div>
+            <div class="text-[11px] text-[#8b949e]">Locked upon confirmation</div>
+          </div>
+          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400">03. PRIVACY</div>
+            <div class="text-lg font-bold font-mono text-white">Secret Rosters</div>
+            <div class="text-[11px] text-[#8b949e]">Drafts stay hidden</div>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2">
+          <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Price Categories</h3>
+          <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+              <span class="text-amber-400 font-bold">Cat 1</span>: 16G
+            </div>
+            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+              <span class="text-sky-400 font-bold">Cat 2</span>: 10G
+            </div>
+            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+              <span class="text-emerald-400 font-bold">Cat 3</span>: 4G
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-4">
+          <button @click="activeTab = 'draft'" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold rounded text-xs transition">
+            Start Drafting ➔
+          </button>
+          <button @click="activeTab = 'leaderboard'" class="flex-1 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded text-xs border border-[#30363d] transition">
+            View Standings ➔
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: ROSTER DRAFT -->
+    <section v-if="activeTab === 'draft'" class="space-y-4">
+      
+      <!-- User Switcher & Budget Bar (Sticky on Mobile) -->
+      <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-lg p-3 sm:p-4 shadow-xl space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#30363d] pb-2">
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-mono text-[#8b949e]">Active Player:</label>
+            <select v-model="selectedParticipantId" class="bg-[#0d1117] border border-[#30363d] text-white font-mono text-xs rounded px-2 py-1 focus:border-emerald-500 outline-none">
+              <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.emoji }} {{ p.name }}</option>
+            </select>
+          </div>
+          <div class="text-xs font-mono flex items-center gap-2">
+            <span>Status:</span>
+            <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded">🔒 LOCKED</span>
+            <span v-else class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">✏️ DRAFTING</span>
+          </div>
+        </div>
+
+        <!-- Budget Progress -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+            <div class="text-[10px] text-[#8b949e]">Budget Spent</div>
+            <div class="font-bold text-white">{{ currentSpentBudget }} / 30 G</div>
+          </div>
+          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+            <div class="text-[10px] text-[#8b949e]">Remaining</div>
+            <div class="font-bold text-emerald-400">{{ 30 - currentSpentBudget }} G</div>
+          </div>
+          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+            <div class="text-[10px] text-[#8b949e]">Roster Size</div>
+            <div class="font-bold text-white">{{ currentParticipant.roster.length }} / 3</div>
+          </div>
+          <div class="flex items-center">
+            <button 
+              @click="openLockModal"
+              :disabled="currentParticipant.isLocked || currentParticipant.roster.length === 0"
+              class="w-full h-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262d] disabled:text-gray-500 text-white font-mono font-bold rounded text-xs transition border border-emerald-500/30 disabled:border-[#30363d]"
+            >
+              {{ currentParticipant.isLocked ? 'Roster Sealed' : 'Lock Roster 🔒' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locked Warning Banner -->
+      <div v-if="currentParticipant.isLocked" class="bg-amber-950/30 border border-amber-800/60 text-amber-300 p-3 rounded text-xs font-mono flex items-center gap-2">
+        <span>🔒</span>
+        <span>Your roster has been confirmed and locked. It is saved in the cloud and cannot be modified.</span>
+      </div>
+
+      <!-- Artist List -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div 
+          v-for="artist in artists" 
+          :key="artist.id"
+          :class="[
+            'p-3 rounded-lg border transition-all flex items-center justify-between gap-3',
+            isArtistSelected(artist.id) 
+              ? 'bg-emerald-950/20 border-emerald-500' 
+              : 'bg-[#161b22] border-[#30363d]'
+          ]"
+        >
+          <div class="min-w-0">
+            <div class="font-mono text-sm font-bold text-white truncate">{{ artist.name }}</div>
+            <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-0.5">
+              <span :class="getCategoryColor(artist.category)">Cat {{ artist.category }}</span>
+              <span>•</span>
+              <span class="text-white font-bold">{{ artist.price }} Giuliani</span>
+            </div>
+          </div>
+
+          <button 
+            @click="toggleArtist(artist)"
+            :disabled="currentParticipant.isLocked || (!isArtistSelected(artist.id) && cannotSelect(artist))"
+            :class="[
+              'px-3 py-1.5 rounded font-mono text-xs font-bold transition touch-target shrink-0',
+              isArtistSelected(artist.id)
+                ? 'bg-red-950 text-red-400 border border-red-800 hover:bg-red-900'
+                : 'bg-[#21262d] text-white border border-[#30363d] hover:border-emerald-500 disabled:opacity-30 disabled:hover:border-[#30363d]'
+            ]"
+          >
+            {{ isArtistSelected(artist.id) ? 'Remove' : 'Select' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: LEADERBOARD -->
+    <section v-if="activeTab === 'leaderboard'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
+            <span>📊</span> leaderboard.json
+          </h2>
+          <span class="text-xs font-mono text-emerald-400">REALTIME_CALCULATED</span>
+        </div>
+
+        <div class="space-y-2">
+          <div 
+            v-for="(p, index) in rankedParticipants" 
+            :key="p.id"
+            class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 font-mono"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span :class="[
+                'w-6 h-6 rounded flex items-center justify-center font-bold text-xs shrink-0',
+                index === 0 ? 'bg-amber-400 text-black' : index === 1 ? 'bg-slate-300 text-black' : index === 2 ? 'bg-amber-700 text-white' : 'bg-[#21262d] text-[#8b949e]'
+              ]">
+                {{ index + 1 }}
+              </span>
+              <span class="text-lg shrink-0">{{ p.emoji }}</span>
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-white truncate">{{ p.name }}</div>
+                <div class="text-[10px] text-[#8b949e]">Roster: 🔒 Secret ({{ p.roster.length }}/3)</div>
+              </div>
+            </div>
+
+            <div class="text-right shrink-0">
+              <div class="text-base font-bold text-emerald-400">{{ getParticipantScore(p) }} pts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: ADMIN CONSOLE -->
+    <section v-if="activeTab === 'admin'" class="space-y-4">
+      
+      <!-- Password Lock Screen -->
+      <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-lg p-6 max-w-md mx-auto space-y-4 font-mono">
+        <div class="text-center space-y-1">
+          <span class="text-3xl">🔑</span>
+          <h2 class="text-base font-bold text-white">Admin Authentication</h2>
+          <p class="text-xs text-[#8b949e]">Enter passcode to unlock score management</p>
+        </div>
+
+        <input 
+          v-model="adminPinInput" 
+          type="password" 
+          placeholder="Passcode (Default: 1234)"
+          @keyup.enter="authenticateAdmin"
+          class="w-full bg-[#0d1117] border border-[#30363d] rounded p-2.5 text-center text-white focus:border-emerald-500 outline-none"
+        >
+
+        <button @click="authenticateAdmin" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs transition">
+          Unlock Console
+        </button>
+      </div>
+
+      <!-- Authenticated Admin Console -->
+      <div v-else class="space-y-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+            <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
+              <span>🎛️</span> admin_console
+            </h2>
+            <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
+          </div>
+
+          <!-- Points Input Form -->
+          <div class="space-y-3 font-mono">
+            <div>
+              <label class="text-xs text-[#8b949e]">Select Artist:</label>
+              <select v-model="adminSelectedArtistId" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs outline-none focus:border-emerald-500">
+                <option v-for="a in artists" :key="a.id" :value="a.id">{{ a.name }} (Current Total: {{ a.points }} pts)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs text-[#8b949e]">Points Delta (+/-):</label>
+              <div class="flex gap-2 mt-1">
+                <input v-model.number="adminPointsDelta" type="number" class="w-28 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs text-center outline-none focus:border-emerald-500">
+                <div class="flex gap-1 overflow-x-auto">
+                  <button v-for="p in [5, 10, 20, -5, -10]" :key="p" @click="adminPointsDelta = p" class="px-2 py-1 bg-[#21262d] border border-[#30363d] text-xs rounded hover:border-emerald-500">
+                    {{ p > 0 ? '+' + p : p }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs text-[#8b949e]">Reason / Note:</label>
+              <input v-model="adminEventNote" type="text" placeholder="e.g., Total black outfit bonus" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs outline-none focus:border-emerald-500">
+            </div>
+
+            <button @click="submitAdminPoints" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs transition">
+              Push Points to Cloud 🚀
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 space-y-2 font-mono">
+          <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">📜 Event Log History</div>
+          <div v-if="auditLog.length === 0" class="text-xs text-[#8b949e] py-2">No event points logged yet.</div>
+          <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2 bg-[#0d1117] rounded border border-[#30363d] flex justify-between">
+            <span class="text-white"><strong>{{ getArtistName(log.artistId) }}</strong>: {{ log.note }}</span>
+            <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold">{{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CONFIRM LOCK MODAL -->
+  <div v-if="showLockModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 font-mono">
+    <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-5 max-w-sm w-full space-y-4">
+      <div class="text-center space-y-1">
+        <span class="text-3xl">⚠️</span>
+        <h3 class="text-base font-bold text-white">Permanent Confirmation</h3>
+        <p class="text-xs text-[#8b949e]">Once confirmed, your roster will be permanently locked and saved to the cloud.</p>
+      </div>
+
+      <div class="bg-[#0d1117] p-3 rounded border border-[#30363d] text-xs space-y-1">
+        <div v-for="id in currentParticipant.roster" :key="id" class="text-white font-bold">
+          • {{ getArtistName(id) }}
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button @click="showLockModal = false" class="flex-1 py-2 bg-[#21262d] text-white rounded text-xs border border-[#30363d]">Cancel</button>
+        <button @click="confirmAndSaveLock" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs">Confirm & Lock</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const { createApp, ref, computed, onMounted } = Vue;
+
+  createApp({
+    setup() {
+      // -----------------------------------------------------------------
+      // JSONBIN CONFIGURATION (PASTE YOUR KEYS HERE)
+      // -----------------------------------------------------------------
+      const BIN_ID = "6ac6655cffd5d16053566a72";
+      const API_KEY = "$2a$10$GDtAx33.KX./RChld5Nt2ernrPH1jlPr5vYqgzbTrsOS9ty60K5IC";
+      const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+      // Navigation & State
+      const activeTab = ref('readme');
+      const syncStatus = ref('Synced');
+      const showLockModal = ref(false);
+      const isAdminAuthenticated = ref(false);
+      const adminPinInput = ref('');
+      const adminSelectedArtistId = ref(1);
+      const adminPointsDelta = ref(10);
+      const adminEventNote = ref('Stage performance bonus');
+
+      const tabs = [
+        { id: 'readme', label: 'README.md', shortLabel: 'README', icon: '📄' },
+        { id: 'draft', label: 'roster_draft.py', shortLabel: 'DRAFT', icon: '✏️' },
+        { id: 'leaderboard', label: 'leaderboard.json', shortLabel: 'SCORES', icon: '📊' },
+        { id: 'admin', label: 'admin_console', shortLabel: 'ADMIN', icon: '🎛️' }
+      ];
+
+      // Default Seed Data
+      const artists = ref([
+        { id: 1, name: "Annalisa", category: 1, price: 16, points: 0 },
+        { id: 2, name: "Geolier", category: 1, price: 16, points: 0 },
+        { id: 3, name: "Angelina Mango", category: 1, price: 16, points: 0 },
+        { id: 4, name: "Ghali", category: 2, price: 10, points: 0 },
+        { id: 5, name: "Irama", category: 2, price: 10, points: 0 },
+        { id: 6, name: "The Kolors", category: 2, price: 10, points: 0 },
+        { id: 7, name: "Mahmood", category: 2, price: 10, points: 0 },
+        { id: 8, name: "Loredana Bertè", category: 3, price: 4, points: 0 },
+        { id: 9, name: "Dargen D'Amico", category: 3, price: 4, points: 0 },
+        { id: 10, name: "Alfa", category: 3, price: 4, points: 0 }
+      ]);
+
+      const participants = ref([
+        { id: 101, name: "Matteo", emoji: "👾", roster: [], isLocked: false },
+        { id: 102, name: "Sofia", emoji: "🚀", roster: [], isLocked: false },
+        { id: 103, name: "Giulia", emoji: "🦊", roster: [], isLocked: false },
+        { id: 104, name: "Luca", emoji: "⚡", roster: [], isLocked: false },
+        { id: 105, name: "Marco", emoji: "🐉", roster: [], isLocked: false }
+      ]);
+
+      const auditLog = ref([]);
+      const selectedParticipantId = ref(101);
+
+      // Computed Properties
+      const currentParticipant = computed(() => {
+        return participants.value.find(p => p.id === selectedParticipantId.value) || participants.value[0];
+      });
+
+      const currentSpentBudget = computed(() => {
+        return currentParticipant.value.roster.reduce((sum, artistId) => {
+          const artist = artists.value.find(a => a.id === artistId);
+          return sum + (artist ? artist.price : 0);
+        }, 0);
+      });
+
+      const rankedParticipants = computed(() => {
+        return [...participants.value].sort((a, b) => getParticipantScore(b) - getParticipantScore(a));
+      });
+
+      // Methods
+      const isArtistSelected = (artistId) => {
+        return currentParticipant.value.roster.includes(artistId);
+      };
+
+      const cannotSelect = (artist) => {
+        if (currentParticipant.value.roster.length >= 3) return true;
+        if (currentSpentBudget.value + artist.price > 30) return true;
+        return false;
+      };
+
+      const toggleArtist = (artist) => {
+        if (currentParticipant.value.isLocked) return;
+        const roster = currentParticipant.value.roster;
+        const idx = roster.indexOf(artist.id);
+        if (idx > -1) {
+          roster.splice(idx, 1);
+        } else if (!cannotSelect(artist)) {
+          roster.push(artist.id);
+        }
+      };
+
+      const openLockModal = () => {
+        if (currentParticipant.value.roster.length > 0) showLockModal.value = true;
+      };
+
+      const confirmAndSaveLock = async () => {
+        currentParticipant.value.isLocked = true;
+        showLockModal.value = false;
+        await saveToCloud();
+      };
+
+      const getParticipantScore = (participant) => {
+        return participant.roster.reduce((total, artistId) => {
+          const artist = artists.value.find(a => a.id === artistId);
+          return total + (artist ? artist.points : 0);
+        }, 0);
+      };
+
+      const getArtistName = (id) => {
+        const a = artists.value.find(art => art.id === id);
+        return a ? a.name : 'Unknown';
+      };
+
+      const getCategoryColor = (cat) => {
+        if (cat === 1) return 'text-amber-400 font-bold';
+        if (cat === 2) return 'text-sky-400 font-bold';
+        return 'text-emerald-400 font-bold';
+      };
+
+      const authenticateAdmin = () => {
+        if (adminPinInput.value === '1234') {
+          isAdminAuthenticated.value = true;
+          adminPinInput.value = '';
+        } else {
+          alert('Incorrect PIN passcode');
+        }
+      };
+
+      const submitAdminPoints = async () => {
+        const artist = artists.value.find(a => a.id === adminSelectedArtistId.value);
+        if (!artist) return;
+
+        artist.points += adminPointsDelta.value;
+        auditLog.value.unshift({
+          artistId: artist.id,
+          delta: adminPointsDelta.value,
+          note: adminEventNote.value || 'Admin update',
+          timestamp: new Date().toLocaleTimeString()
+        });
+
+        await saveToCloud();
+        alert(`Points added! ${artist.name} updated.`);
+      };
+
+      // -----------------------------------------------------------------
+      // JSONBIN API FUNCTIONS
+      // -----------------------------------------------------------------
+      const loadFromCloud = async () => {
+        if (BIN_ID === "YOUR_BIN_ID_HERE") return; // Skip if keys aren't added yet
+        syncStatus.value = 'Syncing...';
+        try {
+          const res = await fetch(`${BASE_URL}/latest`, {
+            headers: { 'X-Master-Key': API_KEY }
+          });
+          const data = await res.json();
+          if (data.record && data.record.artists) {
+            artists.value = data.record.artists;
+            participants.value = data.record.participants;
+            auditLog.value = data.record.auditLog || [];
+            syncStatus.value = 'Synced';
+          }
+        } catch (e) {
+          console.error("Cloud fetch error:", e);
+          syncStatus.value = 'Offline';
+        }
+      };
+
+      const saveToCloud = async () => {
+        if (BIN_ID === "YOUR_BIN_ID_HERE") return;
+        syncStatus.value = 'Saving...';
+        try {
+          await fetch(BASE_URL, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify({
+              artists: artists.value,
+              participants: participants.value,
+              auditLog: auditLog.value
+            })
+          });
+          syncStatus.value = 'Synced';
+        } catch (e) {
+          console.error("Cloud save error:", e);
+          syncStatus.value = 'Error Saving';
+        }
+      };
+
+      onMounted(() => {
+        loadFromCloud();
+        setInterval(loadFromCloud, 10000); // Polling auto-refresh every 10 seconds
+      });
+
+      return {
+        activeTab, tabs, syncStatus, artists, participants, auditLog,
+        selectedParticipantId, currentParticipant, currentSpentBudget,
+        rankedParticipants, isArtistSelected, cannotSelect, toggleArtist,
+        showLockModal, openLockModal, confirmAndSaveLock, getParticipantScore,
+        getArtistName, getCategoryColor, isAdminAuthenticated, adminPinInput,
+        adminSelectedArtistId, adminPointsDelta, adminEventNote, authenticateAdmin,
+        submitAdminPoints, loadFromCloud
+      };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
