@@ -49,53 +49,81 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Force dark popups for native select element options on all OS dropdowns */
+    /* High contrast popups for select options across all OS dark modes */
     select option {
       background-color: #161b22 !important;
       color: #ffffff !important;
+      padding: 8px;
     }
   </style>
 </head>
 <body class="h-full bg-[#0d1117] text-[#c9d1d9] antialiased">
 
-<div id="app" class="min-h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-6">
+<div id="app" class="min-h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-6 pb-12">
 
   <!-- HEADER -->
   <header class="py-4 border-b border-[#30363d] flex items-center justify-between gap-2 shrink-0">
     <div class="flex items-center gap-2 min-w-0">
-      <span class="text-xl shrink-0">⚡</span>
+      <span class="text-2xl shrink-0">⚡</span>
       <div class="min-w-0">
         <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo</h1>
         <p class="text-xs text-[#8b949e] font-mono truncate">2026 // developer_league</p>
       </div>
     </div>
 
-    <!-- Active User Selector & Live Sync Button -->
+    <!-- Active User Identity Selector & Lock Controls -->
     <div class="flex items-center gap-2 shrink-0">
-      <div class="flex flex-col items-end">
-        <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-0.5">
+      <div class="flex flex-col items-end gap-1">
+        <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>{{ syncStatus }}</span>
         </div>
         
-        <!-- User Identity Select Dropdown -->
-        <div class="relative">
-          <select 
-            v-model.number="selectedParticipantId" 
-            @change="onUserChange" 
-            class="bg-[#161b22] text-white border border-[#30363d] font-mono text-xs rounded-lg px-2.5 py-1.5 focus:border-emerald-500 outline-none cursor-pointer hover:border-emerald-500/50 transition appearance-none pr-7 shadow-sm"
-            title="Choose Your Identity"
-          >
-            <option 
-              v-for="p in participants" 
-              :key="p.id" 
-              :value="p.id" 
-              class="bg-[#161b22] text-white py-1"
+        <!-- Identity Controls (Dropdown + Dedicated Lock Button) -->
+        <div class="flex items-center gap-1.5">
+          <div class="relative">
+            <select 
+              v-model.number="selectedParticipantId" 
+              @change="onUserChange" 
+              :disabled="isIdentityLocked"
+              :class="[
+                'bg-[#161b22] text-white border font-mono text-xs rounded-lg px-2.5 py-2 outline-none cursor-pointer transition appearance-none pr-7 shadow-sm',
+                isIdentityLocked ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-300 font-bold opacity-90' : 'border-[#30363d] hover:border-emerald-500 focus:border-emerald-500'
+              ]"
+              title="Choose Your Identity"
             >
-              {{ p.emoji }} {{ p.name }}
-            </option>
-          </select>
-          <span class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-[#8b949e]">▼</span>
+              <option 
+                v-for="p in participants" 
+                :key="p.id" 
+                :value="p.id" 
+                class="bg-[#161b22] text-white py-2"
+              >
+                {{ p.emoji }} {{ p.name }}
+              </option>
+            </select>
+            <span class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-[#8b949e]">▼</span>
+          </div>
+
+          <!-- Lock / Unlock Identity Button -->
+          <button 
+            v-if="!isIdentityLocked"
+            @click="lockIdentity"
+            class="px-2.5 py-2 text-xs font-mono font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg border border-emerald-500/50 transition shrink-0 flex items-center gap-1 shadow-sm touch-target"
+            title="Lock Player Identity on this device"
+          >
+            <span>Lock Identity</span>
+            <span>🔒</span>
+          </button>
+
+          <button 
+            v-else
+            @click="unlockIdentity"
+            class="px-2 py-2 text-xs font-mono bg-[#21262d] hover:bg-amber-950/80 hover:text-amber-300 text-gray-300 border border-[#30363d] hover:border-amber-700 rounded-lg transition shrink-0 flex items-center gap-1 touch-target"
+            title="Unlock Identity to switch player"
+          >
+            <span class="text-xs">🔒</span>
+            <span class="hidden sm:inline text-[11px]">Unlock</span>
+          </button>
         </div>
       </div>
 
@@ -110,7 +138,7 @@
     </div>
   </header>
 
-  <!-- NAVIGATION TABS (Strictly Clean Titles) -->
+  <!-- NAVIGATION TABS -->
   <nav class="flex overflow-x-auto no-scrollbar gap-1.5 py-3 border-b border-[#30363d] shrink-0 font-mono text-xs">
     <button 
       v-for="tab in tabs" 
@@ -142,8 +170,21 @@
         </div>
 
         <p class="text-sm text-[#8b949e] leading-relaxed">
-          Welcome to <strong class="text-white">FantaSanRemo 2026 Developer League</strong>. Select your player identity in the top right header, pick between 1 and 3 artists within your 30 Giuliani budget, seal your roster, and track the live points!
+          Welcome to <strong class="text-white">FantaSanRemo 2026 Developer League</strong>. Select your player identity in the top right header, lock it to authorize drafting on your device, pick between 1 and 3 artists within your 30 Giuliani budget, seal your roster, and track live points!
         </p>
+
+        <!-- Identity Workflow Guide -->
+        <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-4 space-y-2 text-xs font-mono">
+          <div class="text-emerald-400 font-bold flex items-center gap-1.5">
+            <span>🔑</span> HOW TO LOCK & DRAFT
+          </div>
+          <ol class="list-decimal list-inside text-[#8b949e] space-y-1">
+            <li>Select your identity in the upper right header dropdown (e.g. 👾 Matteo, 🚀 Sofia).</li>
+            <li>Click <strong class="text-white">"Lock Identity 🔒"</strong> to bind your user session to this device.</li>
+            <li>Head over to the <strong class="text-white">ROSTER</strong> tab to pick 1, 2, or 3 artists across the 3 Giuliani categories.</li>
+            <li>Click <strong class="text-white">"Lock Roster 🔒"</strong> to seal your final choices to the cloud database.</li>
+          </ol>
+        </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
@@ -177,22 +218,32 @@
       </div>
     </section>
 
-    <!-- VIEW 2: ROSTER (CATEGORIZED BY GIULIANI VALUE) -->
+    <!-- VIEW 2: ROSTER (DRAFTING) -->
     <section v-if="activeTab === 'draft'" class="space-y-5">
       
-      <!-- Sticky Budget Header Bar -->
+      <!-- Sticky Budget & Guard Header Bar -->
       <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 sm:p-4 shadow-2xl space-y-3 backdrop-blur">
         <div class="flex items-center justify-between gap-2 border-b border-[#30363d] pb-2.5">
           <div class="flex items-center gap-2">
             <span class="text-xs font-mono text-[#8b949e]">Player Identity:</span>
-            <span class="text-xs font-mono font-bold text-white bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] flex items-center gap-1.5">
+            <span 
+              :class="[
+                'text-xs font-mono font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5',
+                isIdentityLocked 
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700' 
+                  : 'bg-amber-950/80 text-amber-300 border-amber-700'
+              ]"
+            >
               <span>{{ currentParticipant.emoji }}</span>
               <span>{{ currentParticipant.name }}</span>
+              <span class="text-[10px]">{{ isIdentityLocked ? '🔒 Locked' : '⚠️ Unlocked' }}</span>
             </span>
           </div>
+
           <div class="text-xs font-mono flex items-center gap-2">
             <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">🔒 ROSTER SEALED</span>
-            <span v-else class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-md">✏️ DRAFTING</span>
+            <span v-else-if="isIdentityLocked" class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-md">✏️ DRAFTING</span>
+            <span v-else class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">⚠️ IDENTITY UNLOCKED</span>
           </div>
         </div>
 
@@ -210,18 +261,34 @@
             <div class="text-[10px] text-[#8b949e]">Selected Artists</div>
             <div class="font-bold text-white text-sm">{{ (currentParticipant?.roster || []).length }} / 3</div>
           </div>
+
+          <!-- Lock Roster Action Button with Identity Guard -->
           <div class="flex items-center">
             <button 
               @click="openLockModal"
-              :disabled="currentParticipant.isLocked || (currentParticipant?.roster || []).length < 1"
-              class="w-full h-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262d] disabled:text-gray-500 text-white font-mono font-bold rounded-lg text-xs transition border border-emerald-500/30 disabled:border-[#30363d] touch-target"
+              :disabled="!isIdentityLocked || currentParticipant.isLocked || (currentParticipant?.roster || []).length < 1"
+              :class="[
+                'w-full h-full py-2.5 font-mono font-bold rounded-lg text-xs transition border touch-target flex flex-col justify-center items-center',
+                !isIdentityLocked
+                  ? 'bg-[#21262d] text-amber-400 border-amber-800/80 opacity-90 cursor-not-allowed'
+                  : currentParticipant.isLocked
+                    ? 'bg-[#21262d] text-gray-500 border-[#30363d]'
+                    : (currentParticipant?.roster || []).length >= 1
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500/30'
+                      : 'bg-[#21262d] text-gray-500 border-[#30363d]'
+              ]"
             >
-              {{ currentParticipant.isLocked ? 'Roster Sealed 🔒' : 'Lock Roster 🔒' }}
+              <span v-if="!isIdentityLocked">Lock Identity First ⬆️</span>
+              <span v-else-if="currentParticipant.isLocked">Roster Sealed 🔒</span>
+              <span v-else>Lock Roster 🔒</span>
             </button>
           </div>
         </div>
         
-        <p class="text-[11px] font-mono text-[#8b949e] italic">
+        <p v-if="!isIdentityLocked" class="text-[11px] font-mono text-amber-400 flex items-center gap-1">
+          <span>⚠️</span> You must click <strong>"Lock Identity 🔒"</strong> in the top header before sealing your roster!
+        </p>
+        <p v-else class="text-[11px] font-mono text-[#8b949e] italic">
           💡 Note: A roster can contain 1, 2, or 3 artists. You are not required to select 3 artists or spend all 30 Giuliani.
         </p>
       </div>
@@ -229,21 +296,21 @@
       <!-- Locked Banner -->
       <div v-if="currentParticipant.isLocked" class="bg-amber-950/30 border border-amber-800/60 text-amber-300 p-3.5 rounded-lg text-xs font-mono flex items-center gap-2.5">
         <span class="text-lg">🔒</span>
-        <span>Your roster has been confirmed and locked. It is saved in the live database and cannot be modified.</span>
+        <span>Your roster has been confirmed and locked for <strong>{{ currentParticipant.name }}</strong>. It is saved in the live cloud database.</span>
       </div>
 
-      <!-- ARTIST SELECTION GROUPED BY GIULIANI TIERS -->
+      <!-- ARTIST SELECTION GROUPED BY 3 GIULIANI TIERS -->
       <div v-for="catGroup in artistCategories" :key="catGroup.category" class="space-y-3">
         
         <!-- Category Banner -->
-        <div class="flex items-center justify-between bg-[#161b22] px-4 py-2.5 rounded-xl border border-[#30363d] font-mono">
+        <div class="flex items-center justify-between bg-[#161b22] px-4 py-3 rounded-xl border border-[#30363d] font-mono">
           <div class="flex items-center gap-2">
-            <span :class="catGroup.badgeClass" class="px-2.5 py-0.5 rounded text-xs font-bold border">
+            <span :class="catGroup.badgeClass" class="px-2.5 py-1 rounded text-xs font-bold border">
               Category {{ catGroup.category }}
             </span>
             <span class="text-xs text-white font-bold">{{ catGroup.title }}</span>
           </div>
-          <span class="text-xs font-bold text-emerald-400">{{ catGroup.price }} Giuliani</span>
+          <span class="text-xs font-bold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-800">{{ catGroup.price }} Giuliani</span>
         </div>
 
         <!-- Category Artist Grid -->
@@ -261,7 +328,7 @@
             <div class="min-w-0">
               <div class="font-mono text-sm font-bold text-white truncate">{{ artist.name }}</div>
               <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-1">
-                <span>Value: <strong class="text-white">{{ artist.price }} Giuliani</strong></span>
+                <span>Cost: <strong class="text-white">{{ artist.price }} G</strong></span>
                 <span>•</span>
                 <span class="text-emerald-400 font-bold">{{ artist.points }} pts</span>
               </div>
@@ -291,7 +358,7 @@
       <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
           <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-            <span>📊</span> Leaderboard
+            <span>📊</span> LEADERBOARD
           </h2>
           <span class="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800 font-bold">LIVE STANDINGS</span>
         </div>
@@ -311,8 +378,11 @@
               </span>
               <span class="text-xl shrink-0">{{ p.emoji }}</span>
               <div class="min-w-0">
-                <div class="text-sm font-bold text-white truncate">{{ p.name }}</div>
-                <div class="text-[11px] text-[#8b949e]">Roster: {{ p.isLocked ? '🔒 Locked' : '✏️ Draft' }} ({{ (p?.roster || []).length }}/3)</div>
+                <div class="text-sm font-bold text-white truncate flex items-center gap-2">
+                  <span>{{ p.name }}</span>
+                  <span v-if="p.id === selectedParticipantId" class="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.2 rounded">YOU</span>
+                </div>
+                <div class="text-[11px] text-[#8b949e]">Roster: {{ p.isLocked ? '🔒 Sealed' : '✏️ Draft' }} ({{ (p?.roster || []).length }}/3)</div>
               </div>
             </div>
 
@@ -330,9 +400,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#30363d] pb-3">
           <div>
             <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <span>📜</span> Bonus & Malus Catalog
+              <span>📜</span> LISTS
             </h2>
-            <p class="text-xs text-[#8b949e]">Official point triggers for FantaSanRemo 2026</p>
+            <p class="text-xs text-[#8b949e]">Official Bonus & Malus Catalog for FantaSanRemo 2026</p>
           </div>
 
           <!-- Type Filter -->
@@ -347,11 +417,11 @@
         <input 
           v-model="ruleSearchQuery" 
           type="text" 
-          placeholder="🔍 Search rule (e.g. flowers, total black, stairs)..." 
+          placeholder="🔍 Search rule (e.g. flowers, total black, high five)..." 
           class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-xs text-white focus:border-emerald-500 outline-none"
         >
 
-        <!-- Rule List -->
+        <!-- Rule Catalog List -->
         <div class="space-y-2">
           <div 
             v-for="(rule, idx) in filteredRules" 
@@ -371,7 +441,7 @@
           </div>
 
           <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-6">
-            No bonus or malus rules match your search.
+            No bonus or malus rules match your search query.
           </div>
         </div>
       </div>
@@ -384,7 +454,7 @@
       <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-xl p-6 max-w-md mx-auto space-y-4 font-mono shadow-xl">
         <div class="text-center space-y-1">
           <span class="text-3xl">🔑</span>
-          <h2 class="text-base font-bold text-white">Admin Lock</h2>
+          <h2 class="text-base font-bold text-white">ADMIN</h2>
           <p class="text-xs text-[#8b949e]">Enter passcode to unlock live score editor</p>
         </div>
 
@@ -406,7 +476,7 @@
         <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
             <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-              <span>🎛️</span> Admin Console
+              <span>🎛️</span> ADMIN
             </h2>
             <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
           </div>
@@ -430,7 +500,7 @@
               <div class="flex gap-2 mt-1">
                 <input v-model.number="adminPointsDelta" type="number" class="w-28 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs text-center outline-none focus:border-emerald-500">
                 <div class="flex gap-1.5 overflow-x-auto">
-                  <button v-for="p in [5, 10, 20, 50, -5, -10, -20]" :key="p" @click="adminPointsDelta = p" class="px-2.5 py-1 bg-[#21262d] border border-[#30363d] text-xs rounded-lg hover:border-emerald-500 text-white font-bold">
+                  <button v-for="p in [15, 10, 5, -10, -20]" :key="p" @click="adminPointsDelta = p" class="px-2.5 py-1 bg-[#21262d] border border-[#30363d] text-xs rounded-lg hover:border-emerald-500 text-white font-bold">
                     {{ p > 0 ? '+' + p : p }}
                   </button>
                 </div>
@@ -439,7 +509,7 @@
 
             <div>
               <label class="text-xs text-[#8b949e]">Reason / Trigger Note:</label>
-              <input v-model="adminEventNote" type="text" placeholder="e.g., Total black outfit bonus" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs outline-none focus:border-emerald-500">
+              <input v-model="adminEventNote" type="text" placeholder="e.g., Outfit in Total Black" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs outline-none focus:border-emerald-500">
             </div>
 
             <button @click="submitAdminPoints" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition touch-target">
@@ -462,18 +532,19 @@
 
   </main>
 
-  <!-- CONFIRM LOCK MODAL -->
+  <!-- CONFIRM ROSTER LOCK MODAL -->
   <div v-if="showLockModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 font-mono">
     <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
       <div class="text-center space-y-1">
         <span class="text-3xl">⚠️</span>
         <h3 class="text-base font-bold text-white">Seal Roster Selection</h3>
-        <p class="text-xs text-[#8b949e]">Once confirmed, your roster will be permanently locked and saved to the cloud.</p>
+        <p class="text-xs text-[#8b949e]">Confirming will permanently lock your roster for <strong>{{ currentParticipant.name }}</strong> in the cloud database.</p>
       </div>
 
       <div class="bg-[#0d1117] p-3 rounded-lg border border-[#30363d] text-xs space-y-1">
-        <div v-for="id in (currentParticipant?.roster || [])" :key="id" class="text-white font-bold">
-          • {{ getArtistName(id) }}
+        <div v-for="id in (currentParticipant?.roster || [])" :key="id" class="text-white font-bold flex justify-between">
+          <span>• {{ getArtistName(id) }}</span>
+          <span class="text-emerald-400">{{ getArtistPrice(id) }} G</span>
         </div>
       </div>
 
@@ -491,27 +562,13 @@
 
   createApp({
     setup() {
-      // JSONBIN CONFIGURATION
+      // JSONBIN API CREDENTIALS
       const BIN_ID = "6ac6655cffd5d16053566a72";
       const API_KEY = "$2a$10$GDtAx33.KX./RChld5Nt2ernrPH1jlPr5vYqgzbTrsOS9ty60K5IC";
       const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-      // Navigation & State
+      // Tab Navigation (Clean Strings without extensions)
       const activeTab = ref('readme');
-      const syncStatus = ref('Synced');
-      const showLockModal = ref(false);
-      const isAdminAuthenticated = ref(false);
-      const adminPinInput = ref('');
-      const adminSelectedArtistId = ref(1);
-      const adminPointsDelta = ref(10);
-      const adminEventNote = ref('Stage performance bonus');
-      const adminToastMessage = ref('');
-
-      // Rule filters
-      const ruleFilter = ref('all');
-      const ruleSearchQuery = ref('');
-
-      // Strictly Clean Navigation Tabs (No File Extensions)
       const tabs = [
         { id: 'readme', label: 'README', icon: '📄' },
         { id: 'draft', label: 'ROSTER', icon: '✏️' },
@@ -520,21 +577,52 @@
         { id: 'admin', label: 'ADMIN', icon: '🎛️' }
       ];
 
-      // Default Seed Artists
-      const artists = ref([
+      const syncStatus = ref('Synced');
+      const showLockModal = ref(false);
+      const isIdentityLocked = ref(false);
+
+      // Admin state
+      const isAdminAuthenticated = ref(false);
+      const adminPinInput = ref('');
+      const adminSelectedArtistId = ref(1);
+      const adminPointsDelta = ref(15);
+      const adminEventNote = ref('Outfit in Total Black');
+      const adminToastMessage = ref('');
+
+      // Rule catalog state
+      const ruleFilter = ref('all');
+      const ruleSearchQuery = ref('');
+
+      // DEFAULT ARTIST DATA (3 Giuliani Tiers)
+      const defaultArtists = [
+        // Category 1: 16 Giuliani
         { id: 1, name: "Annalisa", category: 1, price: 16, points: 0 },
         { id: 2, name: "Geolier", category: 1, price: 16, points: 0 },
         { id: 3, name: "Angelina Mango", category: 1, price: 16, points: 0 },
-        { id: 4, name: "Ghali", category: 2, price: 10, points: 0 },
-        { id: 5, name: "Irama", category: 2, price: 10, points: 0 },
-        { id: 6, name: "The Kolors", category: 2, price: 10, points: 0 },
-        { id: 7, name: "Mahmood", category: 2, price: 10, points: 0 },
-        { id: 8, name: "Loredana Bertè", category: 3, price: 4, points: 0 },
-        { id: 9, name: "Dargen D'Amico", category: 3, price: 4, points: 0 },
-        { id: 10, name: "Alfa", category: 3, price: 4, points: 0 }
-      ]);
+        { id: 4, name: "Ghali", category: 1, price: 16, points: 0 },
+        { id: 5, name: "Mahmood", category: 1, price: 16, points: 0 },
+        { id: 6, name: "Alessandra Amoroso", category: 1, price: 16, points: 0 },
 
-      // Seed League Participants
+        // Category 2: 10 Giuliani
+        { id: 7, name: "The Kolors", category: 2, price: 10, points: 0 },
+        { id: 8, name: "Irama", category: 2, price: 10, points: 0 },
+        { id: 9, name: "Emma", category: 2, price: 10, points: 0 },
+        { id: 10, name: "Mr.Rain", category: 2, price: 10, points: 0 },
+        { id: 11, name: "Dargen D'Amico", category: 2, price: 10, points: 0 },
+        { id: 12, name: "Rose Villain", category: 2, price: 10, points: 0 },
+
+        // Category 3: 4 Giuliani
+        { id: 13, name: "Loredana Bertè", category: 3, price: 4, points: 0 },
+        { id: 14, name: "Alfa", category: 3, price: 4, points: 0 },
+        { id: 15, name: "BigMama", category: 3, price: 4, points: 0 },
+        { id: 16, name: "Bnkr44", category: 3, price: 4, points: 0 },
+        { id: 17, name: "Fred De Palma", category: 3, price: 4, points: 0 },
+        { id: 18, name: "La Sad", category: 3, price: 4, points: 0 }
+      ];
+
+      const artists = ref(defaultArtists);
+
+      // PARTICIPANTS SEED
       const participants = ref([
         { id: 101, name: "Matteo", emoji: "👾", roster: [], isLocked: false },
         { id: 102, name: "Sofia", emoji: "🚀", roster: [], isLocked: false },
@@ -543,39 +631,52 @@
         { id: 105, name: "Marco", emoji: "🐉", roster: [], isLocked: false }
       ]);
 
+      // BONUS & MALUS CATALOG
       const bonusMalusRules = ref([
-        { action: "Night Winner / Festival Winner", points: 50 },
+        { action: "Outfit in Total Black", points: 15 },
+        { action: "High Five with Conductor / Host", points: 10 },
         { action: "Standing ovation of Ariston theater", points: 30 },
+        { action: "Night Winner / Festival Night Winner", points: 50 },
         { action: "Direct Instagram live stream during performance", points: 25 },
         { action: "Twerk or ballet move during song", points: 20 },
         { action: "Says 'FantaSanRemo' on stage", points: 20 },
         { action: "Brings flowers to someone in audience", points: 15 },
-        { action: "High five or hug with conductor", points: 15 },
         { action: "Plays an instrument live", points: 15 },
-        { action: "Wearing total black outfit", points: 10 },
         { action: "Outfit with glitter or sequins", points: 10 },
         { action: "Performs after midnight", points: 10 },
         { action: "Dedicates performance to family or team", points: 10 },
         { action: "Wearing sunglasses on stage", points: 5 },
-        { action: "Spoken intro before song starts", points: 5 },
         { action: "Wearing hat or cap on stage", points: -5 },
         { action: "Acoustic feedback on microphone", points: -10 },
-        { action: "Dropping microphone or earpiece", points: -15 },
+        { action: "Mic Failure or dropping earpiece", points: -10 },
+        { action: "Dropping microphone", points: -15 },
         { action: "Technical problem requiring song repetition", points: -20 },
+        { action: "Stumble / Tripping on Ariston stairs", points: -20 },
         { action: "Forgetting song lyrics", points: -20 },
-        { action: "Tripping on Ariston stairs", points: -30 },
         { action: "Whistling or booing from gallery audience", points: -50 }
       ]);
 
       const auditLog = ref([]);
       const selectedParticipantId = ref(101);
 
-      // Save user selection to localStorage
-      const onUserChange = () => {
+      
+      const lockIdentity = () => {
+        isIdentityLocked.value = true;
         localStorage.setItem('fanta_user_id', String(selectedParticipantId.value));
+        localStorage.setItem('fanta_identity_locked', 'true');
       };
 
-      // Computed Current Participant
+      const unlockIdentity = () => {
+        isIdentityLocked.value = false;
+        localStorage.setItem('fanta_identity_locked', 'false');
+      };
+
+      const onUserChange = () => {
+        if (!isIdentityLocked.value) {
+          localStorage.setItem('fanta_user_id', String(selectedParticipantId.value));
+        }
+      };
+
       const currentParticipant = computed(() => {
         let p = participants.value.find(item => Number(item.id) === Number(selectedParticipantId.value));
         if (!p) p = participants.value[0];
@@ -586,26 +687,25 @@
         return p;
       });
 
-      // Artists categorized into Giuliani Groups
       const artistCategories = computed(() => {
         return [
           {
             category: 1,
-            title: "Superstars / Top Tier",
+            title: "Category 1 // Top Tier",
             price: 16,
             badgeClass: "bg-amber-950 text-amber-400 border-amber-800",
             artists: artists.value.filter(a => a.category === 1)
           },
           {
             category: 2,
-            title: "Mid Tier",
+            title: "Category 2 // Mid Tier",
             price: 10,
             badgeClass: "bg-sky-950 text-sky-400 border-sky-800",
             artists: artists.value.filter(a => a.category === 2)
           },
           {
             category: 3,
-            title: "Budget Tier",
+            title: "Category 3 // Budget Tier",
             price: 4,
             badgeClass: "bg-emerald-950 text-emerald-400 border-emerald-800",
             artists: artists.value.filter(a => a.category === 3)
@@ -637,22 +737,22 @@
         });
       });
 
-      // Roster Selection Helpers
       const isArtistSelected = (artistId) => {
         const roster = currentParticipant.value?.roster || [];
         return roster.includes(artistId);
       };
 
       const cannotSelect = (artist) => {
-        const roster = currentParticipant.value?.roster || [];
+        if (!isIdentityLocked.value) return true;
         if (currentParticipant.value?.isLocked) return true;
+        const roster = currentParticipant.value?.roster || [];
         if (roster.length >= 3) return true;
         if (currentSpentBudget.value + artist.price > 30) return true;
         return false;
       };
 
       const toggleArtist = async (artist) => {
-        if (currentParticipant.value?.isLocked) return;
+        if (!isIdentityLocked.value || currentParticipant.value?.isLocked) return;
         const roster = currentParticipant.value.roster;
         const idx = roster.indexOf(artist.id);
         if (idx > -1) {
@@ -664,6 +764,7 @@
       };
 
       const openLockModal = () => {
+        if (!isIdentityLocked.value) return;
         const roster = currentParticipant.value?.roster || [];
         if (roster.length >= 1 && roster.length <= 3) {
           showLockModal.value = true;
@@ -687,6 +788,11 @@
       const getArtistName = (id) => {
         const a = artists.value.find(art => art.id === id);
         return a ? a.name : 'Unknown';
+      };
+
+      const getArtistPrice = (id) => {
+        const a = artists.value.find(art => art.id === id);
+        return a ? a.price : 0;
       };
 
       const authenticateAdmin = () => {
@@ -716,7 +822,6 @@
         setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
-      // JSONBIN API SYNC FUNCTIONS
       const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
         try {
@@ -725,8 +830,15 @@
           });
           const data = await res.json();
           if (data.record && data.record.artists) {
-            artists.value = data.record.artists;
-            
+            // Merge loaded points into artists list
+            const cloudArtists = data.record.artists;
+            artists.value.forEach(localA => {
+              const cloudA = cloudArtists.find(ca => ca.id === localA.id);
+              if (cloudA) {
+                localA.points = cloudA.points || 0;
+              }
+            });
+
             if (Array.isArray(data.record.participants)) {
               participants.value = data.record.participants.map(p => ({
                 ...p,
@@ -765,24 +877,31 @@
       };
 
       onMounted(() => {
-        // Restore active user selection from localStorage
+        // Restore player identity and locked state from localStorage
         const savedUserId = localStorage.getItem('fanta_user_id');
+        const savedIdentityLocked = localStorage.getItem('fanta_identity_locked');
+
         if (savedUserId) {
           selectedParticipantId.value = Number(savedUserId);
         }
+        if (savedIdentityLocked === 'true') {
+          isIdentityLocked.value = true;
+        }
+
         loadFromCloud();
-        setInterval(loadFromCloud, 10000); // Poll cloud every 10 seconds
+        setInterval(loadFromCloud, 10000); // Polling cloud sync every 10s
       });
 
       return {
         activeTab, tabs, syncStatus, artists, participants, auditLog,
-        selectedParticipantId, currentParticipant, artistCategories, currentSpentBudget,
+        selectedParticipantId, isIdentityLocked, lockIdentity, unlockIdentity, onUserChange,
+        currentParticipant, artistCategories, currentSpentBudget,
         rankedParticipants, filteredRules, ruleFilter, ruleSearchQuery,
         isArtistSelected, cannotSelect, toggleArtist, showLockModal, openLockModal,
-        confirmAndSaveLock, getParticipantScore, getArtistName,
+        confirmAndSaveLock, getParticipantScore, getArtistName, getArtistPrice,
         isAdminAuthenticated, adminPinInput, adminSelectedArtistId, adminPointsDelta,
         adminEventNote, adminToastMessage, authenticateAdmin, submitAdminPoints,
-        loadFromCloud, onUserChange
+        loadFromCloud
       };
     }
   }).mount('#app');
