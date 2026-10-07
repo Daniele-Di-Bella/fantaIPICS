@@ -82,26 +82,49 @@
         <!-- Identity Controls (Dropdown + Dedicated Lock Button) -->
         <div class="flex items-center gap-1.5">
           <div class="relative">
-            <select 
-              v-model.number="selectedParticipantId" 
-              @change="onUserChange" 
+            <!-- Custom Identity Dropdown Button -->
+            <button 
+              @click="toggleIdentityDropdown"
               :disabled="isIdentityLocked"
               :class="[
-                'bg-[#161b22] text-white border font-mono text-xs rounded-lg px-2.5 py-2 outline-none cursor-pointer transition appearance-none pr-7 shadow-sm',
-                isIdentityLocked ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-300 font-bold opacity-90' : 'border-[#30363d] hover:border-emerald-500 focus:border-emerald-500'
+                'bg-[#161b22] text-white border font-mono text-xs rounded-lg px-3 py-2 outline-none flex items-center gap-2 transition shadow-sm touch-target',
+                isIdentityLocked ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-300 font-bold opacity-90 cursor-not-allowed' : 'border-[#30363d] hover:border-emerald-500 focus:border-emerald-500'
               ]"
               title="Choose Your Identity"
             >
-              <option 
+              <span>{{ currentParticipant.emoji }}</span>
+              <span class="font-bold">{{ currentParticipant.name }}</span>
+              <span class="text-[10px] text-[#8b949e] ml-1 transition-transform duration-200" :class="{ 'rotate-180': isIdentityDropdownOpen }">▼</span>
+            </button>
+
+            <!-- Custom Dropdown Menu Popup -->
+            <div 
+              v-if="isIdentityDropdownOpen && !isIdentityLocked" 
+              class="absolute right-0 mt-1.5 w-48 bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl py-1.5 z-50 font-mono text-xs overflow-hidden"
+            >
+              <button 
                 v-for="p in participants" 
                 :key="p.id" 
-                :value="p.id" 
-                class="bg-[#161b22] text-white py-2"
+                @click="selectParticipant(p.id)" 
+                :class="[
+                  'w-full px-3 py-2.5 text-left flex items-center justify-between transition hover:bg-[#21262d]',
+                  p.id === selectedParticipantId ? 'bg-[#21262d] text-emerald-400 font-bold' : 'text-white'
+                ]"
               >
-                {{ p.emoji }} {{ p.name }}
-              </option>
-            </select>
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-[#8b949e]">▼</span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="text-sm shrink-0">{{ p.emoji }}</span>
+                  <span class="truncate">{{ p.name }}</span>
+                </div>
+                <span v-if="p.id === selectedParticipantId" class="text-xs shrink-0">✓</span>
+              </button>
+            </div>
+            
+            <!-- Backdrop Overlay to close menu on click outside -->
+            <div 
+              v-if="isIdentityDropdownOpen" 
+              @click="isIdentityDropdownOpen = false" 
+              class="fixed inset-0 z-40"
+            ></div>
           </div>
 
           <!-- Lock / Unlock Identity Button -->
@@ -580,6 +603,7 @@
       const syncStatus = ref('Synced');
       const showLockModal = ref(false);
       const isIdentityLocked = ref(false);
+      const isIdentityDropdownOpen = ref(false);
 
       // Admin state
       const isAdminAuthenticated = ref(false);
@@ -662,6 +686,7 @@
       
       const lockIdentity = () => {
         isIdentityLocked.value = true;
+        isIdentityDropdownOpen.value = false;
         localStorage.setItem('fanta_user_id', String(selectedParticipantId.value));
         localStorage.setItem('fanta_identity_locked', 'true');
       };
@@ -669,6 +694,18 @@
       const unlockIdentity = () => {
         isIdentityLocked.value = false;
         localStorage.setItem('fanta_identity_locked', 'false');
+      };
+
+      const toggleIdentityDropdown = () => {
+        if (!isIdentityLocked.value) {
+          isIdentityDropdownOpen.value = !isIdentityDropdownOpen.value;
+        }
+      };
+
+      const selectParticipant = (id) => {
+        selectedParticipantId.value = id;
+        isIdentityDropdownOpen.value = false;
+        onUserChange();
       };
 
       const onUserChange = () => {
@@ -839,7 +876,7 @@
               }
             });
 
-            if (Array.isArray(data.record.participants)) {
+            if (Array.isArray(data.record.participants) && data.record.participants.length > 0) {
               participants.value = data.record.participants.map(p => ({
                 ...p,
                 roster: Array.isArray(p.roster) ? p.roster : []
@@ -894,7 +931,8 @@
 
       return {
         activeTab, tabs, syncStatus, artists, participants, auditLog,
-        selectedParticipantId, isIdentityLocked, lockIdentity, unlockIdentity, onUserChange,
+        selectedParticipantId, isIdentityLocked, isIdentityDropdownOpen,
+        toggleIdentityDropdown, selectParticipant, lockIdentity, unlockIdentity, onUserChange,
         currentParticipant, artistCategories, currentSpentBudget,
         rankedParticipants, filteredRules, ruleFilter, ruleSearchQuery,
         isArtistSelected, cannotSelect, toggleArtist, showLockModal, openLockModal,
