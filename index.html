@@ -49,6 +49,12 @@
     /* Hide scrollbars for clean tab bar horizontal scrolling */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Explicit dark options styling for mobile OS native popups */
+    select option {
+      background-color: #161b22 !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body class="h-full bg-[#0d1117] text-[#c9d1d9] antialiased">
@@ -60,34 +66,38 @@
     <div class="flex items-center gap-2 min-w-0">
       <span class="text-xl shrink-0">⚡</span>
       <div class="min-w-0">
-        <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo.v2</h1>
-        <p class="text-xs text-[#8b949e] font-mono truncate">v2026.1 // synchronized_league</p>
+        <h1 class="text-base sm:text-lg font-mono font-bold text-white tracking-tight truncate">fanta_sanremo</h1>
+        <p class="text-xs text-[#8b949e] font-mono truncate">2026 // synchronized_league</p>
       </div>
     </div>
 
-    <!-- Active User Dropdown & Sync Button -->
+    <!-- Active User Dropdown & Sync Indicator -->
     <div class="flex items-center gap-2 shrink-0">
       <div class="flex flex-col items-end">
         <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-0.5">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>{{ syncStatus }}</span>
         </div>
-        <!-- User Selection Dropdown -->
-        <select 
-          v-model.number="selectedParticipantId" 
-          @change="onUserChange" 
-          class="bg-[#161b22] border border-[#30363d] text-white font-mono text-xs rounded px-2 py-1.5 focus:border-emerald-500 outline-none cursor-pointer hover:border-emerald-500/50 transition"
-          title="Select Your Identity"
-        >
-          <option v-for="p in participants" :key="p.id" :value="p.id">
-            {{ p.emoji }} {{ p.name }}
-          </option>
-        </select>
+        
+        <!-- User Selection Dropdown with explicit dark styling -->
+        <div class="relative">
+          <select 
+            v-model.number="selectedParticipantId" 
+            @change="onUserChange" 
+            class="bg-[#161b22] text-white border border-[#30363d] font-mono text-xs rounded-lg px-2.5 py-1.5 focus:border-emerald-500 outline-none cursor-pointer hover:border-emerald-500/50 transition appearance-none pr-7 shadow-sm"
+            title="Select Your Identity"
+          >
+            <option v-for="p in participants" :key="p.id" :value="p.id" class="bg-[#161b22] text-white py-1">
+              {{ p.emoji }} {{ p.name }}
+            </option>
+          </select>
+          <span class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] text-[#8b949e]">▼</span>
+        </div>
       </div>
 
       <button 
         @click="loadFromCloud" 
-        class="p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
+        class="p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded-lg hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
         title="Manual Sync"
       >
         🔄
@@ -95,81 +105,83 @@
     </div>
   </header>
 
-  <!-- NAVIGATION TABS -->
-  <nav class="flex overflow-x-auto no-scrollbar gap-1 py-3 border-b border-[#30363d] shrink-0 font-mono text-xs">
+  <!-- NAVIGATION TABS (No File Suffixes) -->
+  <nav class="flex overflow-x-auto no-scrollbar gap-1.5 py-3 border-b border-[#30363d] shrink-0 font-mono text-xs">
     <button 
       v-for="tab in tabs" 
       :key="tab.id"
       @click="activeTab = tab.id"
       :class="[
-        'px-3 py-2 rounded border transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 touch-target',
+        'px-3.5 py-2 rounded-lg border transition-all whitespace-nowrap shrink-0 flex items-center gap-2 touch-target font-semibold',
         activeTab === tab.id 
-          ? 'bg-[#21262d] text-white border-emerald-500 font-semibold' 
+          ? 'bg-[#21262d] text-white border-emerald-500 shadow-sm' 
           : 'bg-[#161b22] text-[#8b949e] border-[#30363d] hover:text-white'
       ]"
     >
       <span>{{ tab.icon }}</span>
-      <span class="sm:hidden">{{ tab.shortLabel }}</span>
-      <span class="hidden sm:inline">{{ tab.label }}</span>
+      <span>{{ tab.label }}</span>
     </button>
   </nav>
 
   <!-- MAIN CONTENT AREA -->
   <main class="flex-1 py-4 space-y-6">
 
-    <!-- VIEW 1: WELCOME / README -->
+    <!-- VIEW 1: README -->
     <section v-if="activeTab === 'readme'" class="space-y-4">
-      <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-5">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
           <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-            <span>📄</span> README.md
+            <span>📄</span> README
           </h2>
-          <span class="text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded">PUBLIC_RULES</span>
+          <span class="text-xs font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-full font-bold">PUBLIC RULES</span>
         </div>
 
         <p class="text-sm text-[#8b949e] leading-relaxed">
-          Welcome to the developer edition of <strong class="text-white">FantaSanRemo 2026</strong>. Draft your top 3 artists, manage your virtual Giuliani budget, and climb the live leaderboard during the festival nights.
+          Welcome to the developer edition of <strong class="text-white">FantaSanRemo 2026</strong>. Pick your identity from the upper right dropdown, draft your top 3 artists, manage your virtual Giuliani budget, and track scores live!
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
-            <div class="text-xs font-mono text-emerald-400">01. BUDGET</div>
-            <div class="text-lg font-bold font-mono text-white">30 Giuliani</div>
-            <div class="text-[11px] text-[#8b949e]">Virtual currency limit</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400 font-bold">01. BUDGET</div>
+            <div class="text-xl font-bold font-mono text-white mt-0.5">30 Giuliani</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">Virtual currency limit</div>
           </div>
-          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
-            <div class="text-xs font-mono text-emerald-400">02. CAPACITY</div>
-            <div class="text-lg font-bold font-mono text-white">Max 3 Artists</div>
-            <div class="text-[11px] text-[#8b949e]">Locked upon confirmation</div>
+          <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400 font-bold">02. CAPACITY</div>
+            <div class="text-xl font-bold font-mono text-white mt-0.5">Max 3 Artists</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">Locked upon confirmation</div>
           </div>
-          <div class="bg-[#0d1117] p-3 rounded border border-[#30363d]">
-            <div class="text-xs font-mono text-emerald-400">03. PRIVACY</div>
-            <div class="text-lg font-bold font-mono text-white">Secret Rosters</div>
-            <div class="text-[11px] text-[#8b949e]">Drafts stay hidden</div>
+          <div class="bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d]">
+            <div class="text-xs font-mono text-emerald-400 font-bold">03. PRIVACY</div>
+            <div class="text-xl font-bold font-mono text-white mt-0.5">Secret Rosters</div>
+            <div class="text-[11px] text-[#8b949e] mt-0.5">Drafts stay hidden</div>
           </div>
         </div>
 
         <div class="space-y-2 pt-2">
           <h3 class="text-xs font-mono font-bold text-white uppercase tracking-wider">Price Categories</h3>
-          <div class="grid grid-cols-3 gap-2 text-xs font-mono">
-            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+          <div class="grid grid-cols-3 gap-2.5 text-xs font-mono">
+            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
               <span class="text-amber-400 font-bold">Cat 1</span>: 16G
             </div>
-            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
               <span class="text-sky-400 font-bold">Cat 2</span>: 10G
             </div>
-            <div class="p-2 bg-[#0d1117] rounded border border-[#30363d] text-center">
+            <div class="p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-center">
               <span class="text-emerald-400 font-bold">Cat 3</span>: 4G
             </div>
           </div>
         </div>
 
-        <div class="flex gap-2 pt-4">
-          <button @click="activeTab = 'draft'" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold rounded text-xs transition">
+        <div class="flex flex-col sm:flex-row gap-2.5 pt-3">
+          <button @click="activeTab = 'draft'" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-bold rounded-lg text-xs transition shadow-sm touch-target">
             Start Drafting ➔
           </button>
-          <button @click="activeTab = 'leaderboard'" class="flex-1 py-2.5 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded text-xs border border-[#30363d] transition">
+          <button @click="activeTab = 'leaderboard'" class="flex-1 py-3 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded-lg text-xs border border-[#30363d] transition touch-target">
             View Standings ➔
+          </button>
+          <button @click="activeTab = 'lists'" class="flex-1 py-3 bg-[#21262d] hover:bg-[#30363d] text-white font-mono rounded-lg text-xs border border-[#30363d] transition touch-target">
+            Bonus & Malus ➔
           </button>
         </div>
       </div>
@@ -178,41 +190,42 @@
     <!-- VIEW 2: ROSTER DRAFT -->
     <section v-if="activeTab === 'draft'" class="space-y-4">
       
-      <!-- Budget Bar & Active Player Status (Sticky on Mobile) -->
-      <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-lg p-3 sm:p-4 shadow-xl space-y-3">
-        <div class="flex items-center justify-between gap-2 border-b border-[#30363d] pb-2">
+      <!-- Budget Bar & Active Player Status (Sticky Header) -->
+      <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-xl p-3.5 sm:p-4 shadow-2xl space-y-3 backdrop-blur">
+        <div class="flex items-center justify-between gap-2 border-b border-[#30363d] pb-2.5">
           <div class="flex items-center gap-2">
             <span class="text-xs font-mono text-[#8b949e]">Active Player:</span>
-            <span class="text-xs font-mono font-bold text-white bg-[#0d1117] px-2 py-1 rounded border border-[#30363d] flex items-center gap-1">
-              {{ currentParticipant.emoji }} {{ currentParticipant.name }}
+            <span class="text-xs font-mono font-bold text-white bg-[#0d1117] px-2.5 py-1 rounded-lg border border-[#30363d] flex items-center gap-1.5">
+              <span>{{ currentParticipant.emoji }}</span>
+              <span>{{ currentParticipant.name }}</span>
             </span>
           </div>
           <div class="text-xs font-mono flex items-center gap-2">
-            <span>Status:</span>
-            <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded">🔒 LOCKED</span>
-            <span v-else class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">✏️ DRAFTING</span>
+            <span class="hidden sm:inline">Status:</span>
+            <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">🔒 LOCKED</span>
+            <span v-else class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-md">✏️ DRAFTING</span>
           </div>
         </div>
 
         <!-- Budget Progress -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+          <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
             <div class="text-[10px] text-[#8b949e]">Budget Spent</div>
-            <div class="font-bold text-white">{{ currentSpentBudget }} / 30 G</div>
+            <div class="font-bold text-white text-sm">{{ currentSpentBudget }} / 30 G</div>
           </div>
-          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+          <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
             <div class="text-[10px] text-[#8b949e]">Remaining</div>
-            <div class="font-bold text-emerald-400">{{ 30 - currentSpentBudget }} G</div>
+            <div class="font-bold text-emerald-400 text-sm">{{ 30 - currentSpentBudget }} G</div>
           </div>
-          <div class="bg-[#0d1117] p-2 rounded border border-[#30363d]">
+          <div class="bg-[#0d1117] p-2.5 rounded-lg border border-[#30363d]">
             <div class="text-[10px] text-[#8b949e]">Roster Size</div>
-            <div class="font-bold text-white">{{ currentParticipant.roster.length }} / 3</div>
+            <div class="font-bold text-white text-sm">{{ (currentParticipant?.roster || []).length }} / 3</div>
           </div>
           <div class="flex items-center">
             <button 
               @click="openLockModal"
-              :disabled="currentParticipant.isLocked || currentParticipant.roster.length === 0"
-              class="w-full h-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262d] disabled:text-gray-500 text-white font-mono font-bold rounded text-xs transition border border-emerald-500/30 disabled:border-[#30363d]"
+              :disabled="currentParticipant.isLocked || (currentParticipant?.roster || []).length === 0"
+              class="w-full h-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[#21262d] disabled:text-gray-500 text-white font-mono font-bold rounded-lg text-xs transition border border-emerald-500/30 disabled:border-[#30363d] touch-target"
             >
               {{ currentParticipant.isLocked ? 'Roster Sealed' : 'Lock Roster 🔒' }}
             </button>
@@ -221,8 +234,8 @@
       </div>
 
       <!-- Locked Warning Banner -->
-      <div v-if="currentParticipant.isLocked" class="bg-amber-950/30 border border-amber-800/60 text-amber-300 p-3 rounded text-xs font-mono flex items-center gap-2">
-        <span>🔒</span>
+      <div v-if="currentParticipant.isLocked" class="bg-amber-950/30 border border-amber-800/60 text-amber-300 p-3.5 rounded-lg text-xs font-mono flex items-center gap-2.5">
+        <span class="text-lg">🔒</span>
         <span>Your roster has been confirmed and locked. It is saved in the cloud and cannot be modified.</span>
       </div>
 
@@ -232,15 +245,15 @@
           v-for="artist in artists" 
           :key="artist.id"
           :class="[
-            'p-3 rounded-lg border transition-all flex items-center justify-between gap-3',
+            'p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3',
             isArtistSelected(artist.id) 
-              ? 'bg-emerald-950/20 border-emerald-500' 
+              ? 'bg-emerald-950/20 border-emerald-500 shadow-sm' 
               : 'bg-[#161b22] border-[#30363d]'
           ]"
         >
           <div class="min-w-0">
             <div class="font-mono text-sm font-bold text-white truncate">{{ artist.name }}</div>
-            <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-0.5">
+            <div class="flex items-center gap-2 text-xs font-mono text-[#8b949e] mt-1">
               <span :class="getCategoryColor(artist.category)">Cat {{ artist.category }}</span>
               <span>•</span>
               <span class="text-white font-bold">{{ artist.price }} Giuliani</span>
@@ -251,7 +264,7 @@
             @click="toggleArtist(artist)"
             :disabled="currentParticipant.isLocked || (!isArtistSelected(artist.id) && cannotSelect(artist))"
             :class="[
-              'px-3 py-1.5 rounded font-mono text-xs font-bold transition touch-target shrink-0',
+              'px-3.5 py-2 rounded-lg font-mono text-xs font-bold transition touch-target shrink-0',
               isArtistSelected(artist.id)
                 ? 'bg-red-950 text-red-400 border border-red-800 hover:bg-red-900'
                 : 'bg-[#21262d] text-white border border-[#30363d] hover:border-emerald-500 disabled:opacity-30 disabled:hover:border-[#30363d]'
@@ -265,47 +278,161 @@
 
     <!-- VIEW 3: LEADERBOARD -->
     <section v-if="activeTab === 'leaderboard'" class="space-y-4">
-      <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
           <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-            <span>📊</span> leaderboard.json
+            <span>📊</span> Leaderboard
           </h2>
-          <span class="text-xs font-mono text-emerald-400">REALTIME_CALCULATED</span>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800 font-bold">REALTIME CALCULATED</span>
         </div>
 
-        <div class="space-y-2">
+        <div class="space-y-2.5">
           <div 
             v-for="(p, index) in rankedParticipants" 
             :key="p.id"
-            class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 font-mono"
+            class="p-3.5 bg-[#0d1117] border border-[#30363d] rounded-xl flex items-center justify-between gap-3 font-mono"
           >
             <div class="flex items-center gap-3 min-w-0">
               <span :class="[
-                'w-6 h-6 rounded flex items-center justify-center font-bold text-xs shrink-0',
-                index === 0 ? 'bg-amber-400 text-black' : index === 1 ? 'bg-slate-300 text-black' : index === 2 ? 'bg-amber-700 text-white' : 'bg-[#21262d] text-[#8b949e]'
+                'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0',
+                index === 0 ? 'bg-amber-400 text-black shadow-amber-500/20 shadow-md' : index === 1 ? 'bg-slate-300 text-black' : index === 2 ? 'bg-amber-700 text-white' : 'bg-[#21262d] text-[#8b949e]'
               ]">
                 {{ index + 1 }}
               </span>
-              <span class="text-lg shrink-0">{{ p.emoji }}</span>
+              <span class="text-xl shrink-0">{{ p.emoji }}</span>
               <div class="min-w-0">
                 <div class="text-sm font-bold text-white truncate">{{ p.name }}</div>
-                <div class="text-[10px] text-[#8b949e]">Roster: 🔒 Secret ({{ p.roster.length }}/3)</div>
+                <div class="text-[11px] text-[#8b949e]">Roster: {{ p.isLocked ? '🔒 Locked' : '✏️ Draft' }} ({{ (p?.roster || []).length }}/3)</div>
               </div>
             </div>
 
             <div class="text-right shrink-0">
-              <div class="text-base font-bold text-emerald-400">{{ getParticipantScore(p) }} pts</div>
+              <div class="text-lg font-bold text-emerald-400">{{ getParticipantScore(p) }} pts</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 4: ADMIN CONSOLE -->
+    <!-- VIEW 4: LISTS (BONUS / MALUS & GIULIANI VALUES) -->
+    <section v-if="activeTab === 'lists'" class="space-y-6">
+      
+      <!-- Sub Tab Toggle -->
+      <div class="flex bg-[#161b22] p-1 border border-[#30363d] rounded-xl font-mono text-xs">
+        <button 
+          @click="listsSubTab = 'rules'" 
+          :class="[
+            'flex-1 py-2 rounded-lg font-bold transition',
+            listsSubTab === 'rules' ? 'bg-[#21262d] text-white border border-emerald-500/40' : 'text-[#8b949e] hover:text-white'
+          ]"
+        >
+          🎁 Bonus & Malus
+        </button>
+        <button 
+          @click="listsSubTab = 'giuliani'" 
+          :class="[
+            'flex-1 py-2 rounded-lg font-bold transition',
+            listsSubTab === 'giuliani' ? 'bg-[#21262d] text-white border border-emerald-500/40' : 'text-[#8b949e] hover:text-white'
+          ]"
+        >
+          🏷️ Artist Giuliani Values
+        </button>
+      </div>
+
+      <!-- SUBTAB A: BONUS & MALUS CATALOG -->
+      <div v-if="listsSubTab === 'rules'" class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#30363d] pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📜</span> Bonus & Malus Catalog
+            </h2>
+            <p class="text-xs text-[#8b949e]">Official point triggers for FantaSanRemo 2026</p>
+          </div>
+
+          <!-- Filter Pills -->
+          <div class="flex gap-1 bg-[#0d1117] p-1 rounded-lg border border-[#30363d] text-xs">
+            <button @click="ruleFilter = 'all'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'all' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">All</button>
+            <button @click="ruleFilter = 'bonus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'bonus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Bonuses (+)</button>
+            <button @click="ruleFilter = 'malus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'malus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Maluses (-)</button>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <input 
+          v-model="ruleSearchQuery" 
+          type="text" 
+          placeholder="🔍 Search action (e.g., outfit, flowers, stairs)..." 
+          class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-xs text-white focus:border-emerald-500 outline-none"
+        >
+
+        <!-- Rules List -->
+        <div class="space-y-2">
+          <div 
+            v-for="(rule, idx) in filteredRules" 
+            :key="idx" 
+            class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 text-xs"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="text-base shrink-0">{{ rule.points > 0 ? '✨' : '⚠️' }}</span>
+              <span class="text-white font-medium truncate">{{ rule.action }}</span>
+            </div>
+            <span :class="[
+              'px-2.5 py-1 rounded font-bold shrink-0 text-xs',
+              rule.points > 0 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'
+            ]">
+              {{ rule.points > 0 ? '+' + rule.points : rule.points }} pts
+            </span>
+          </div>
+          <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-4">
+            No bonus or malus rules match your search query.
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB B: ARTISTS GIULIANI VALUE RANKING -->
+      <div v-if="listsSubTab === 'giuliani'" class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="border-b border-[#30363d] pb-3">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
+            <span>🏷️</span> Artist Giuliani Value Ranking
+          </h2>
+          <p class="text-xs text-[#8b949e]">Ordered by price category and current points scored</p>
+        </div>
+
+        <div class="space-y-2.5">
+          <div 
+            v-for="artist in sortedArtistsByPrice" 
+            :key="artist.id" 
+            class="p-3.5 bg-[#0d1117] border border-[#30363d] rounded-xl flex items-center justify-between gap-3 text-xs"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <span :class="[
+                'px-2 py-1 rounded font-bold text-[10px] shrink-0',
+                artist.category === 1 ? 'bg-amber-950 text-amber-400 border border-amber-800' :
+                artist.category === 2 ? 'bg-sky-950 text-sky-400 border border-sky-800' :
+                'bg-emerald-950 text-emerald-400 border border-emerald-800'
+              ]">
+                CAT {{ artist.category }}
+              </span>
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-white truncate">{{ artist.name }}</div>
+                <div class="text-[11px] text-[#8b949e]">Price: <strong class="text-white">{{ artist.price }} Giuliani</strong></div>
+              </div>
+            </div>
+
+            <div class="text-right shrink-0">
+              <div class="text-xs text-[#8b949e]">Score</div>
+              <div class="text-sm font-bold text-emerald-400">{{ artist.points }} pts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: ADMIN CONSOLE -->
     <section v-if="activeTab === 'admin'" class="space-y-4">
       
       <!-- Password Lock Screen -->
-      <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-lg p-6 max-w-md mx-auto space-y-4 font-mono">
+      <div v-if="!isAdminAuthenticated" class="bg-[#161b22] border border-[#30363d] rounded-xl p-6 max-w-md mx-auto space-y-4 font-mono shadow-xl">
         <div class="text-center space-y-1">
           <span class="text-3xl">🔑</span>
           <h2 class="text-base font-bold text-white">Admin Authentication</h2>
@@ -317,29 +444,34 @@
           type="password" 
           placeholder="Passcode (Default: 1234)"
           @keyup.enter="authenticateAdmin"
-          class="w-full bg-[#0d1117] border border-[#30363d] rounded p-2.5 text-center text-white focus:border-emerald-500 outline-none"
+          class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-center text-white focus:border-emerald-500 outline-none"
         >
 
-        <button @click="authenticateAdmin" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs transition">
+        <button @click="authenticateAdmin" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition touch-target">
           Unlock Console
         </button>
       </div>
 
       <!-- Authenticated Admin Console -->
       <div v-else class="space-y-4">
-        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 sm:p-6 space-y-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
           <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
             <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-              <span>🎛️</span> admin_console
+              <span>🎛️</span> Admin Console
             </h2>
             <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
+          </div>
+
+          <!-- Toast Message Notification -->
+          <div v-if="adminToastMessage" class="p-3 bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-mono rounded-lg transition">
+            {{ adminToastMessage }}
           </div>
 
           <!-- Points Input Form -->
           <div class="space-y-3 font-mono">
             <div>
               <label class="text-xs text-[#8b949e]">Select Artist:</label>
-              <select v-model="adminSelectedArtistId" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs outline-none focus:border-emerald-500">
+              <select v-model="adminSelectedArtistId" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs outline-none focus:border-emerald-500">
                 <option v-for="a in artists" :key="a.id" :value="a.id">{{ a.name }} (Current Total: {{ a.points }} pts)</option>
               </select>
             </div>
@@ -347,9 +479,9 @@
             <div>
               <label class="text-xs text-[#8b949e]">Points Delta (+/-):</label>
               <div class="flex gap-2 mt-1">
-                <input v-model.number="adminPointsDelta" type="number" class="w-28 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs text-center outline-none focus:border-emerald-500">
-                <div class="flex gap-1 overflow-x-auto">
-                  <button v-for="p in [5, 10, 20, -5, -10]" :key="p" @click="adminPointsDelta = p" class="px-2 py-1 bg-[#21262d] border border-[#30363d] text-xs rounded hover:border-emerald-500">
+                <input v-model.number="adminPointsDelta" type="number" class="w-28 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs text-center outline-none focus:border-emerald-500">
+                <div class="flex gap-1.5 overflow-x-auto">
+                  <button v-for="p in [5, 10, 20, 50, -5, -10, -20]" :key="p" @click="adminPointsDelta = p" class="px-2.5 py-1 bg-[#21262d] border border-[#30363d] text-xs rounded-lg hover:border-emerald-500 text-white font-bold">
                     {{ p > 0 ? '+' + p : p }}
                   </button>
                 </div>
@@ -357,23 +489,23 @@
             </div>
 
             <div>
-              <label class="text-xs text-[#8b949e]">Reason / Note:</label>
-              <input v-model="adminEventNote" type="text" placeholder="e.g., Total black outfit bonus" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded p-2 text-white text-xs outline-none focus:border-emerald-500">
+              <label class="text-xs text-[#8b949e]">Reason / Event Note:</label>
+              <input v-model="adminEventNote" type="text" placeholder="e.g., Total black outfit bonus" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-white text-xs outline-none focus:border-emerald-500">
             </div>
 
-            <button @click="submitAdminPoints" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs transition">
+            <button @click="submitAdminPoints" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition touch-target">
               Push Points to Cloud 🚀
             </button>
           </div>
         </div>
 
         <!-- Audit Log -->
-        <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-4 space-y-2 font-mono">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 space-y-2 font-mono">
           <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">📜 Event Log History</div>
           <div v-if="auditLog.length === 0" class="text-xs text-[#8b949e] py-2">No event points logged yet.</div>
-          <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2 bg-[#0d1117] rounded border border-[#30363d] flex justify-between">
+          <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex justify-between items-center">
             <span class="text-white"><strong>{{ getArtistName(log.artistId) }}</strong>: {{ log.note }}</span>
-            <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold">{{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts</span>
+            <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold shrink-0 ml-2">{{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts</span>
           </div>
         </div>
       </div>
@@ -383,22 +515,22 @@
 
   <!-- CONFIRM LOCK MODAL -->
   <div v-if="showLockModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 font-mono">
-    <div class="bg-[#161b22] border border-[#30363d] rounded-lg p-5 max-w-sm w-full space-y-4">
+    <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
       <div class="text-center space-y-1">
         <span class="text-3xl">⚠️</span>
         <h3 class="text-base font-bold text-white">Permanent Confirmation</h3>
         <p class="text-xs text-[#8b949e]">Once confirmed, your roster will be permanently locked and saved to the cloud.</p>
       </div>
 
-      <div class="bg-[#0d1117] p-3 rounded border border-[#30363d] text-xs space-y-1">
-        <div v-for="id in currentParticipant.roster" :key="id" class="text-white font-bold">
+      <div class="bg-[#0d1117] p-3 rounded-lg border border-[#30363d] text-xs space-y-1">
+        <div v-for="id in (currentParticipant?.roster || [])" :key="id" class="text-white font-bold">
           • {{ getArtistName(id) }}
         </div>
       </div>
 
       <div class="flex gap-2">
-        <button @click="showLockModal = false" class="flex-1 py-2 bg-[#21262d] text-white rounded text-xs border border-[#30363d]">Cancel</button>
-        <button @click="confirmAndSaveLock" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded text-xs">Confirm & Lock</button>
+        <button @click="showLockModal = false" class="flex-1 py-2.5 bg-[#21262d] text-white rounded-lg text-xs border border-[#30363d] touch-target">Cancel</button>
+        <button @click="confirmAndSaveLock" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs touch-target">Confirm & Lock</button>
       </div>
     </div>
   </div>
@@ -411,15 +543,14 @@
 
   createApp({
     setup() {
-      // -----------------------------------------------------------------
       // JSONBIN CONFIGURATION
-      // -----------------------------------------------------------------
       const BIN_ID = "6ac6655cffd5d16053566a72";
       const API_KEY = "$2a$10$GDtAx33.KX./RChld5Nt2ernrPH1jlPr5vYqgzbTrsOS9ty60K5IC";
       const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
       // Navigation & State
       const activeTab = ref('readme');
+      const listsSubTab = ref('rules');
       const syncStatus = ref('Synced');
       const showLockModal = ref(false);
       const isAdminAuthenticated = ref(false);
@@ -427,12 +558,19 @@
       const adminSelectedArtistId = ref(1);
       const adminPointsDelta = ref(10);
       const adminEventNote = ref('Stage performance bonus');
+      const adminToastMessage = ref('');
 
+      // Rule filters
+      const ruleFilter = ref('all');
+      const ruleSearchQuery = ref('');
+
+      // Navigation Clean Tabs (No File Suffixes)
       const tabs = [
-        { id: 'readme', label: 'README.md', shortLabel: 'README', icon: '📄' },
-        { id: 'draft', label: 'roster_draft.py', shortLabel: 'DRAFT', icon: '✏️' },
-        { id: 'leaderboard', label: 'leaderboard.json', shortLabel: 'SCORES', icon: '📊' },
-        { id: 'admin', label: 'admin_console', shortLabel: 'ADMIN', icon: '🎛️' }
+        { id: 'readme', label: 'README', icon: '📄' },
+        { id: 'draft', label: 'ROSTER', icon: '✏️' },
+        { id: 'leaderboard', label: 'LEADERBOARD', icon: '📊' },
+        { id: 'lists', label: 'LISTS', icon: '📋' },
+        { id: 'admin', label: 'ADMIN', icon: '🎛️' }
       ];
 
       // Default Seed Data
@@ -457,21 +595,52 @@
         { id: 105, name: "Marco", emoji: "🐉", roster: [], isLocked: false }
       ]);
 
+      const bonusMalusRules = ref([
+        { action: "Night Winner / Festival Winner", points: 50 },
+        { action: "Standing ovation of Ariston theater", points: 30 },
+        { action: "Direct Instagram live stream during performance", points: 25 },
+        { action: "Twerk or ballet move during song", points: 20 },
+        { action: "Says 'FantaSanRemo' on stage", points: 20 },
+        { action: "Brings flowers to someone in audience", points: 15 },
+        { action: "High five or hug with conductor", points: 15 },
+        { action: "Plays an instrument live", points: 15 },
+        { action: "Wearing total black outfit", points: 10 },
+        { action: "Outfit with glitter or sequins", points: 10 },
+        { action: "Performs after midnight", points: 10 },
+        { action: "Dedicates performance to family or team", points: 10 },
+        { action: "Wearing sunglasses on stage", points: 5 },
+        { action: "Spoken intro before song starts", points: 5 },
+        { action: "Wearing hat or cap on stage", points: -5 },
+        { action: "Acoustic feedback on microphone", points: -10 },
+        { action: "Dropping microphone or earpiece", points: -15 },
+        { action: "Technical problem requiring song repetition", points: -20 },
+        { action: "Forgetting song lyrics", points: -20 },
+        { action: "Tripping on Ariston stairs", points: -30 },
+        { action: "Whistling or booing from gallery audience", points: -50 }
+      ]);
+
       const auditLog = ref([]);
       const selectedParticipantId = ref(101);
 
-      // Save user selection to localStorage whenever they switch identity
+      // Save user selection to localStorage
       const onUserChange = () => {
         localStorage.setItem('fanta_user_id', selectedParticipantId.value);
       };
 
-      // Computed Properties
+      // Computed Properties with Strict Null & Undefined Guards
       const currentParticipant = computed(() => {
-        return participants.value.find(p => Number(p.id) === Number(selectedParticipantId.value)) || participants.value[0];
+        let p = participants.value.find(item => Number(item.id) === Number(selectedParticipantId.value));
+        if (!p) p = participants.value[0];
+        if (!p) {
+          p = { id: 101, name: "Matteo", emoji: "👾", roster: [], isLocked: false };
+        }
+        if (!Array.isArray(p.roster)) p.roster = [];
+        return p;
       });
 
       const currentSpentBudget = computed(() => {
-        return currentParticipant.value.roster.reduce((sum, artistId) => {
+        const roster = currentParticipant.value?.roster || [];
+        return roster.reduce((sum, artistId) => {
           const artist = artists.value.find(a => a.id === artistId);
           return sum + (artist ? artist.price : 0);
         }, 0);
@@ -481,20 +650,43 @@
         return [...participants.value].sort((a, b) => getParticipantScore(b) - getParticipantScore(a));
       });
 
-      // Methods
+      const sortedArtistsByPrice = computed(() => {
+        return [...artists.value].sort((a, b) => {
+          if (a.category !== b.category) return a.category - b.category;
+          return b.points - a.points;
+        });
+      });
+
+      const filteredRules = computed(() => {
+        return bonusMalusRules.value.filter(r => {
+          // Type filter
+          if (ruleFilter.value === 'bonus' && r.points <= 0) return false;
+          if (ruleFilter.value === 'malus' && r.points >= 0) return false;
+          // Search filter
+          if (ruleSearchQuery.value.trim() !== '') {
+            const query = ruleSearchQuery.value.toLowerCase();
+            return r.action.toLowerCase().includes(query);
+          }
+          return true;
+        });
+      });
+
+      // Roster & Selection Logic
       const isArtistSelected = (artistId) => {
-        return currentParticipant.value.roster.includes(artistId);
+        const roster = currentParticipant.value?.roster || [];
+        return roster.includes(artistId);
       };
 
       const cannotSelect = (artist) => {
-        if (currentParticipant.value.isLocked) return true;
-        if (currentParticipant.value.roster.length >= 3) return true;
+        const roster = currentParticipant.value?.roster || [];
+        if (currentParticipant.value?.isLocked) return true;
+        if (roster.length >= 3) return true;
         if (currentSpentBudget.value + artist.price > 30) return true;
         return false;
       };
 
       const toggleArtist = async (artist) => {
-        if (currentParticipant.value.isLocked) return;
+        if (currentParticipant.value?.isLocked) return;
         const roster = currentParticipant.value.roster;
         const idx = roster.indexOf(artist.id);
         if (idx > -1) {
@@ -502,12 +694,13 @@
         } else if (!cannotSelect(artist)) {
           roster.push(artist.id);
         }
-        // Save roster immediately so background auto-polling doesn't overwrite unsaved local selections
+        // Save immediately so auto-polling background fetches won't overwrite selections
         await saveToCloud();
       };
 
       const openLockModal = () => {
-        if (currentParticipant.value.roster.length > 0) showLockModal.value = true;
+        const roster = currentParticipant.value?.roster || [];
+        if (roster.length > 0) showLockModal.value = true;
       };
 
       const confirmAndSaveLock = async () => {
@@ -517,7 +710,8 @@
       };
 
       const getParticipantScore = (participant) => {
-        return participant.roster.reduce((total, artistId) => {
+        const roster = participant?.roster || [];
+        return roster.reduce((total, artistId) => {
           const artist = artists.value.find(a => a.id === artistId);
           return total + (artist ? artist.points : 0);
         }, 0);
@@ -539,7 +733,8 @@
           isAdminAuthenticated.value = true;
           adminPinInput.value = '';
         } else {
-          alert('Incorrect PIN passcode');
+          adminToastMessage.value = 'Incorrect admin passcode!';
+          setTimeout(() => adminToastMessage.value = '', 3000);
         }
       };
 
@@ -556,7 +751,8 @@
         });
 
         await saveToCloud();
-        alert(`Points added! ${artist.name} updated.`);
+        adminToastMessage.value = `Successfully updated ${artist.name} by ${adminPointsDelta.value > 0 ? '+' : ''}${adminPointsDelta.value} pts!`;
+        setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
       // -----------------------------------------------------------------
@@ -572,7 +768,14 @@
           const data = await res.json();
           if (data.record && data.record.artists) {
             artists.value = data.record.artists;
-            participants.value = data.record.participants;
+            
+            // Map participants safely preserving array types
+            if (Array.isArray(data.record.participants)) {
+              participants.value = data.record.participants.map(p => ({
+                ...p,
+                roster: Array.isArray(p.roster) ? p.roster : []
+              }));
+            }
             auditLog.value = data.record.auditLog || [];
             syncStatus.value = 'Synced';
           }
@@ -612,17 +815,18 @@
           selectedParticipantId.value = Number(savedUserId);
         }
         loadFromCloud();
-        setInterval(loadFromCloud, 10000);
+        setInterval(loadFromCloud, 10000); // 10s cloud polling
       });
 
       return {
-        activeTab, tabs, syncStatus, artists, participants, auditLog,
+        activeTab, listsSubTab, tabs, syncStatus, artists, participants, auditLog,
         selectedParticipantId, currentParticipant, currentSpentBudget,
-        rankedParticipants, isArtistSelected, cannotSelect, toggleArtist,
-        showLockModal, openLockModal, confirmAndSaveLock, getParticipantScore,
-        getArtistName, getCategoryColor, isAdminAuthenticated, adminPinInput,
-        adminSelectedArtistId, adminPointsDelta, adminEventNote, authenticateAdmin,
-        submitAdminPoints, loadFromCloud, onUserChange
+        rankedParticipants, sortedArtistsByPrice, filteredRules, ruleFilter, ruleSearchQuery,
+        isArtistSelected, cannotSelect, toggleArtist, showLockModal, openLockModal,
+        confirmAndSaveLock, getParticipantScore, getArtistName, getCategoryColor,
+        isAdminAuthenticated, adminPinInput, adminSelectedArtistId, adminPointsDelta,
+        adminEventNote, adminToastMessage, authenticateAdmin, submitAdminPoints,
+        loadFromCloud, onUserChange
       };
     }
   }).mount('#app');
