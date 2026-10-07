@@ -65,16 +65,31 @@
       </div>
     </div>
 
-    <!-- Sync Indicator & Active User -->
+    <!-- Active User Dropdown & Sync Button -->
     <div class="flex items-center gap-2 shrink-0">
-      <div class="text-right hidden sm:block">
-        <div class="text-xs font-mono text-emerald-400 flex items-center justify-end gap-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> {{ syncStatus }}
+      <div class="flex flex-col items-end">
+        <div class="text-[10px] font-mono text-emerald-400 flex items-center gap-1 mb-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>{{ syncStatus }}</span>
         </div>
-        <div class="text-[10px] text-[#8b949e] font-mono">User: {{ currentParticipant.name }}</div>
+        <!-- User Selection Dropdown -->
+        <select 
+          v-model.number="selectedParticipantId" 
+          @change="onUserChange" 
+          class="bg-[#161b22] border border-[#30363d] text-white font-mono text-xs rounded px-2 py-1.5 focus:border-emerald-500 outline-none cursor-pointer hover:border-emerald-500/50 transition"
+          title="Select Your Identity"
+        >
+          <option v-for="p in participants" :key="p.id" :value="p.id">
+            {{ p.emoji }} {{ p.name }}
+          </option>
+        </select>
       </div>
 
-      <button @click="loadFromCloud" class="p-2 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded hover:border-emerald-500 text-gray-300 transition shrink-0" title="Manual Sync">
+      <button 
+        @click="loadFromCloud" 
+        class="p-2.5 text-xs font-mono bg-[#161b22] border border-[#30363d] rounded hover:border-emerald-500 text-gray-300 transition shrink-0 flex items-center justify-center touch-target" 
+        title="Manual Sync"
+      >
         🔄
       </button>
     </div>
@@ -163,14 +178,14 @@
     <!-- VIEW 2: ROSTER DRAFT -->
     <section v-if="activeTab === 'draft'" class="space-y-4">
       
-      <!-- User Switcher & Budget Bar (Sticky on Mobile) -->
+      <!-- Budget Bar & Active Player Status (Sticky on Mobile) -->
       <div class="sticky top-2 z-10 bg-[#161b22] border border-[#30363d] rounded-lg p-3 sm:p-4 shadow-xl space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#30363d] pb-2">
+        <div class="flex items-center justify-between gap-2 border-b border-[#30363d] pb-2">
           <div class="flex items-center gap-2">
-            <label class="text-xs font-mono text-[#8b949e]">Active Player:</label>
-            <select v-model="selectedParticipantId" class="bg-[#0d1117] border border-[#30363d] text-white font-mono text-xs rounded px-2 py-1 focus:border-emerald-500 outline-none">
-              <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.emoji }} {{ p.name }}</option>
-            </select>
+            <span class="text-xs font-mono text-[#8b949e]">Active Player:</span>
+            <span class="text-xs font-mono font-bold text-white bg-[#0d1117] px-2 py-1 rounded border border-[#30363d] flex items-center gap-1">
+              {{ currentParticipant.emoji }} {{ currentParticipant.name }}
+            </span>
           </div>
           <div class="text-xs font-mono flex items-center gap-2">
             <span>Status:</span>
@@ -397,7 +412,7 @@
   createApp({
     setup() {
       // -----------------------------------------------------------------
-      // JSONBIN CONFIGURATION (PASTE YOUR KEYS HERE)
+      // JSONBIN CONFIGURATION
       // -----------------------------------------------------------------
       const BIN_ID = "6ac6655cffd5d16053566a72";
       const API_KEY = "$2a$10$GDtAx33.KX./RChld5Nt2ernrPH1jlPr5vYqgzbTrsOS9ty60K5IC";
@@ -445,9 +460,14 @@
       const auditLog = ref([]);
       const selectedParticipantId = ref(101);
 
+      // Save user selection to localStorage whenever they switch identity
+      const onUserChange = () => {
+        localStorage.setItem('fanta_user_id', selectedParticipantId.value);
+      };
+
       // Computed Properties
       const currentParticipant = computed(() => {
-        return participants.value.find(p => p.id === selectedParticipantId.value) || participants.value[0];
+        return participants.value.find(p => Number(p.id) === Number(selectedParticipantId.value)) || participants.value[0];
       });
 
       const currentSpentBudget = computed(() => {
@@ -467,12 +487,13 @@
       };
 
       const cannotSelect = (artist) => {
+        if (currentParticipant.value.isLocked) return true;
         if (currentParticipant.value.roster.length >= 3) return true;
         if (currentSpentBudget.value + artist.price > 30) return true;
         return false;
       };
 
-      const toggleArtist = (artist) => {
+      const toggleArtist = async (artist) => {
         if (currentParticipant.value.isLocked) return;
         const roster = currentParticipant.value.roster;
         const idx = roster.indexOf(artist.id);
@@ -481,6 +502,8 @@
         } else if (!cannotSelect(artist)) {
           roster.push(artist.id);
         }
+        // Save roster immediately so background auto-polling doesn't overwrite unsaved local selections
+        await saveToCloud();
       };
 
       const openLockModal = () => {
@@ -540,7 +563,7 @@
       // JSONBIN API FUNCTIONS
       // -----------------------------------------------------------------
       const loadFromCloud = async () => {
-        if (BIN_ID === "YOUR_BIN_ID_HERE") return; // Skip if keys aren't added yet
+        if (BIN_ID === "YOUR_BIN_ID_HERE") return;
         syncStatus.value = 'Syncing...';
         try {
           const res = await fetch(`${BASE_URL}/latest`, {
@@ -583,8 +606,13 @@
       };
 
       onMounted(() => {
+        // Restore user identity selection from LocalStorage
+        const savedUserId = localStorage.getItem('fanta_user_id');
+        if (savedUserId) {
+          selectedParticipantId.value = Number(savedUserId);
+        }
         loadFromCloud();
-        setInterval(loadFromCloud, 10000); // Polling auto-refresh every 10 seconds
+        setInterval(loadFromCloud, 10000);
       });
 
       return {
@@ -594,7 +622,7 @@
         showLockModal, openLockModal, confirmAndSaveLock, getParticipantScore,
         getArtistName, getCategoryColor, isAdminAuthenticated, adminPinInput,
         adminSelectedArtistId, adminPointsDelta, adminEventNote, authenticateAdmin,
-        submitAdminPoints, loadFromCloud
+        submitAdminPoints, loadFromCloud, onUserChange
       };
     }
   }).mount('#app');
