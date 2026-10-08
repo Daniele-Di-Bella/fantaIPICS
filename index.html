@@ -789,7 +789,7 @@
         let p = participants.value.find(item => Number(item.id) === Number(selectedParticipantId.value));
         if (!p) p = participants.value[0];
         if (!p) {
-          p = { id: 101, name: "Matteo", emoji: "👾", roster: [], isLocked: false };
+          p = { id: 101, name: "Agnese", emoji: "🐦‍⬛", roster: [], isLocked: false };
         }
         if (!Array.isArray(p.roster)) p.roster = [];
         return p;
