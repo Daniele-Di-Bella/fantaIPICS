@@ -657,28 +657,26 @@
       // DEFAULT ARTIST DATA (3 Giuliani Tiers)
       const defaultArtists = [
         // Category 1: 16 Giuliani
-        { id: 1, name: "Annalisa", category: 1, price: 16, points: 0 },
-        { id: 2, name: "Geolier", category: 1, price: 16, points: 0 },
-        { id: 3, name: "Angelina Mango", category: 1, price: 16, points: 0 },
-        { id: 4, name: "Ghali", category: 1, price: 16, points: 0 },
-        { id: 5, name: "Mahmood", category: 1, price: 16, points: 0 },
-        { id: 6, name: "Alessandra Amoroso", category: 1, price: 16, points: 0 },
+        { id: 1, name: "❄️ Carlo", category: 1, price: 16, points: 0 },
+        { id: 2, name: "⛵ Barbara", category: 1, price: 16, points: 0 },
+        { id: 3, name: "🤡 TJ", category: 1, price: 16, points: 0 },
+        { id: 4, name: "🐴 Fabrizio", category: 1, price: 16, points: 0 },
+        { id: 5, name: "🍺 Andrea", category: 1, price: 16, points: 0 },
+        { id: 6, name: "🐥 Jacopo", category: 1, price: 16, points: 0 },
 
         // Category 2: 10 Giuliani
-        { id: 7, name: "The Kolors", category: 2, price: 10, points: 0 },
-        { id: 8, name: "Irama", category: 2, price: 10, points: 0 },
-        { id: 9, name: "Emma", category: 2, price: 10, points: 0 },
-        { id: 10, name: "Mr.Rain", category: 2, price: 10, points: 0 },
-        { id: 11, name: "Dargen D'Amico", category: 2, price: 10, points: 0 },
-        { id: 12, name: "Rose Villain", category: 2, price: 10, points: 0 },
+        { id: 7, name: "🐒 Daniele", category: 2, price: 10, points: 0 },
+        { id: 8, name: "🌋 Federico", category: 2, price: 10, points: 0 },
+        { id: 9, name: "🦠 Catherine", category: 3, price: 4, points: 0 },
 
         // Category 3: 4 Giuliani
-        { id: 13, name: "Loredana Bertè", category: 3, price: 4, points: 0 },
-        { id: 14, name: "Alfa", category: 3, price: 4, points: 0 },
-        { id: 15, name: "BigMama", category: 3, price: 4, points: 0 },
-        { id: 16, name: "Bnkr44", category: 3, price: 4, points: 0 },
-        { id: 17, name: "Fred De Palma", category: 3, price: 4, points: 0 },
-        { id: 18, name: "La Sad", category: 3, price: 4, points: 0 }
+        { id: 10, name: "🐦‍⬛ Agnese", category: 3, price: 4, points: 0 },
+        { id: 11, name: "🐋 Giulia", category: 3, price: 4, points: 0 },
+        { id: 12, name: "😈 Cecilia", category: 3, price: 4, points: 0 },
+        { id: 13, name: "🧛‍♂️ Enrico", category: 3, price: 4, points: 0 },
+        { id: 14, name: "🏝️ Joao", category: 3, price: 4, points: 0 },
+        { id: 15, name: "🦩 Margherita", category: 3, price: 4, points: 0 },
+        { id: 16, name: "👾 Matteo", category: 3, price: 4, points: 0 }
       ];
 
       const artists = ref(defaultArtists);
@@ -777,21 +775,21 @@
         return [
           {
             category: 1,
-            title: "Category 1 // Top Tier",
+            title: "Category 1 // Full Professors and Previous Champions",
             price: 16,
             badgeClass: "bg-amber-950 text-amber-400 border-amber-800",
             artists: artists.value.filter(a => a.category === 1)
           },
           {
             category: 2,
-            title: "Category 2 // Mid Tier",
+            title: "Category 2 // Pole Position",
             price: 10,
             badgeClass: "bg-sky-950 text-sky-400 border-sky-800",
             artists: artists.value.filter(a => a.category === 2)
           },
           {
             category: 3,
-            title: "Category 3 // Budget Tier",
+            title: "Category 3 // Serious People",
             price: 4,
             badgeClass: "bg-emerald-950 text-emerald-400 border-emerald-800",
             artists: artists.value.filter(a => a.category === 3)
