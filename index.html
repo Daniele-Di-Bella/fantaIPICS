@@ -281,14 +281,14 @@
             >
               <span>{{ currentParticipant.emoji }}</span>
               <span>{{ currentParticipant.name }}</span>
-              <span class="text-[10px]">{{ isIdentityLocked ? '🔒 Locked' : '⚠️ Unlocked' }}</span>
+              <span class="text-[10px]">{{ isIdentityLocked ? '🔒 Locked' : '?' }}</span>
             </span>
           </div>
 
           <div class="text-xs font-mono flex items-center gap-2">
             <span v-if="currentParticipant.isLocked" class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">🔒 ROSTER SEALED</span>
             <span v-else-if="isIdentityLocked" class="text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-md">✏️ DRAFTING</span>
-            <span v-else class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">⚠️ IDENTITY UNLOCKED</span>
+            <span v-else class="text-amber-400 font-bold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md">⚠️</span>
           </div>
         </div>
 
@@ -331,7 +331,7 @@
         </div>
         
         <p v-if="!isIdentityLocked" class="text-[11px] font-mono text-amber-400 flex items-center gap-1">
-          <span>⚠️</span> You must click <strong>"Lock Identity 🔒"</strong> in the top header before sealing your roster!
+          You must click 🔒 in the top header before sealing your roster!
         </p>
         <p v-else class="text-[11px] font-mono text-[#8b949e] italic">
           💡 Note: A roster can contain 1, 2, or 3 artists. You are not required to select 3 artists or spend all 30 Giuliani.
