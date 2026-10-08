@@ -956,12 +956,12 @@
               }
             });
 
-            if (Array.isArray(data.record.participants) && data.record.participants.length > 0) {
-              participants.value = data.record.participants.map(p => ({
-                ...p,
-                roster: Array.isArray(p.roster) ? p.roster : []
-              }));
-            }
+            // if (Array.isArray(data.record.participants) && data.record.participants.length > 0) {
+            //   participants.value = data.record.participants.map(p => ({
+            //     ...p,
+            //     roster: Array.isArray(p.roster) ? p.roster : []
+            //   }));
+            // }
             auditLog.value = data.record.auditLog || [];
             syncStatus.value = 'Synced';
           }
