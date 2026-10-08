@@ -333,8 +333,8 @@
         <p v-if="!isIdentityLocked" class="text-[11px] font-mono text-amber-400 flex items-center gap-1">
           You must click 🔒 in the top header before sealing your roster!
         </p>
-        <p v-else class="text-[11px] font-mono text-[#8b949e] italic">
-          💡 Note: A roster can contain 1, 2, or 3 artists. You are not required to select 3 artists or spend all 30 Giuliani.
+        <p v-else class="text-[11px] font-mono text-[#8b949e]">
+          💡 Note: A roster can contain 1, 2, or 3 players. You are not required to select 3 players or spend all 30 Giuliani.
         </p>
       </div>
 
@@ -475,7 +475,7 @@
           >
             <div class="flex items-center gap-2.5 min-w-0">
               <span class="text-base shrink-0">{{ rule.points > 0 ? '✨' : '⚠️' }}</span>
-              <span class="text-white font-medium truncate">{{ rule.action }}</span>
+              <span class="text-white font-medium break-words">{{ rule.action }}</span>
             </div>
             <span :class="[
               'px-2.5 py-1 rounded font-bold shrink-0 text-xs',
@@ -732,6 +732,7 @@
         { id: 116, name: "Matteo", emoji: "👾", roster: [], isLocked: false },
         { id: 117, name: "TJ", emoji: "🤡", roster: [], isLocked: false },
         { id: 118, name: "AndreaS", emoji: "🛰️", roster: [], isLocked: false }
+        { id: 119, name: "Azzurra", emoji: "💎", roster: [], isLocked: false }
       ]);
 
       // BONUS & MALUS CATALOG
