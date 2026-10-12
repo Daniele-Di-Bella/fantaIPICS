@@ -705,14 +705,21 @@
 
         <!-- Audit Log -->
         <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 space-y-2 font-mono">
-          <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">🕒 Event Log History</div>
+          <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">📜 Event Log History</div>
           <div v-if="auditLog.length === 0" class="text-xs text-[#8b949e] py-2">No event points logged yet.</div>
-          <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex justify-between items-center">
+          
+          <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex justify-between items-center group">
             <span class="text-white"><strong>{{ getArtistName(log.artistId) }}</strong>: {{ log.note }}</span>
-            <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold shrink-0 ml-2">{{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts</span>
+            <div class="flex items-center gap-3 shrink-0 ml-2">
+              <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold">
+                {{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts
+              </span>
+              <button @click="removeLog(idx)" class="text-[#8b949e] hover:text-red-400 transition" title="Delete Event">
+                🗑️
+              </button>
+            </div>
           </div>
         </div>
-      </div>
     </section>
 
   </main>
@@ -1199,6 +1206,27 @@
         setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
+      const removeLog = async (idx) => {
+        if (!confirm("Are you sure you want to delete this event? The points will be reversed.")) return;
+        
+        const log = auditLog.value[idx];
+        const artist = artists.value.find(a => a.id === log.artistId);
+        
+        // Reverse the points applied by this event
+        if (artist) {
+          artist.points -= log.delta;
+        }
+        
+        // Remove the log entry
+        auditLog.value.splice(idx, 1);
+        
+        // Sync to cloud
+        await saveToCloud();
+        
+        adminToastMessage.value = `Event deleted and points reversed!`;
+        setTimeout(() => adminToastMessage.value = '', 4000);
+      };
+
       const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
         try {
@@ -1301,7 +1329,8 @@
         loadFromCloud,
         resetAllPoints,
         showSelfSelectionModal,
-        appStats
+        appStats, 
+        removeLog
       };
     }
   }).mount('#app');
