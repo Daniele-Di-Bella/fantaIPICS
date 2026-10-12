@@ -172,7 +172,7 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 py-4 space-y-6">
 
-    <!-- VIEW 1: README -->
+    <!-- README -->
     <section v-if="activeTab === 'readme'" class="space-y-4">
       <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-5">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
@@ -263,7 +263,7 @@
       </div>
     </section>
 
-    <!-- VIEW 2: ROSTER (DRAFTING) -->
+    <!-- ROSTER (DRAFTING) -->
     <section v-if="activeTab === 'draft'" class="space-y-5">
       
       <!-- Sticky Budget & Guard Header Bar -->
@@ -398,7 +398,7 @@
 
     </section>
 
-    <!-- VIEW 3: LEADERBOARD -->
+    <!-- LEADERBOARD -->
     <section v-if="activeTab === 'leaderboard'" class="space-y-4">
       <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
@@ -439,60 +439,83 @@
       </div>
     </section>
 
-    <!-- VIEW 4: LISTS (BONUS & MALUS CATALOG) -->
-    <section v-if="activeTab === 'lists'" class="space-y-4">
-      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#30363d] pb-3">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <span>📜</span> LISTS
-            </h2>
-            <p class="text-xs text-[#8b949e]">Official Bonus & Malus Catalog for fantaIPICS 2026</p>
+    <!-- VIEW: STATS DASHBOARD -->
+    <section v-if="activeTab === 'stats'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-6 font-mono">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📈</span> GLOBAL STATS
+          </h2>
+          <span class="text-xs text-[#8b949e]">Live Insights</span>
+        </div>
+
+        <!-- 4-Grid Highlights -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- MVP -->
+          <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
+            <span class="text-2xl mt-1">🏆</span>
+            <span class="text-[10px] text-amber-400 font-bold tracking-wider">TOP SCORER</span>
+            <span class="text-sm font-bold text-white truncate w-full">{{ appStats.mvp?.name || '---' }}</span>
+            <span class="text-xs text-[#8b949e]">{{ appStats.mvp?.points || 0 }} pts</span>
+          </div>
+          
+          <!-- Flop -->
+          <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
+            <span class="text-2xl mt-1">📉</span>
+            <span class="text-[10px] text-red-400 font-bold tracking-wider">BIGGEST FLOP</span>
+            <span class="text-sm font-bold text-white truncate w-full">{{ appStats.flop?.name || '---' }}</span>
+            <span class="text-xs text-[#8b949e]">{{ appStats.flop?.points || 0 }} pts</span>
           </div>
 
-          <!-- Type Filter -->
-          <div class="flex gap-1 bg-[#0d1117] p-1 rounded-lg border border-[#30363d] text-xs">
-            <button @click="ruleFilter = 'all'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'all' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">All</button>
-            <button @click="ruleFilter = 'bonus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'bonus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Bonuses (+)</button>
-            <button @click="ruleFilter = 'malus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'malus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Maluses (-)</button>
+          <!-- Crowd Favorite -->
+          <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
+            <span class="text-2xl mt-1">🔥</span>
+            <span class="text-[10px] text-orange-400 font-bold tracking-wider">MOST PICKED</span>
+            <span class="text-sm font-bold text-white truncate w-full">{{ appStats.mostPicked?.name || '---' }}</span>
+            <span class="text-xs text-[#8b949e]">in {{ appStats.mostPicked?.picks || 0 }} rosters</span>
+          </div>
+
+          <!-- Best ROI -->
+          <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
+            <span class="text-2xl mt-1">💎</span>
+            <span class="text-[10px] text-emerald-400 font-bold tracking-wider">BEST VALUE</span>
+            <span class="text-sm font-bold text-white truncate w-full">{{ appStats.bestRoi?.name || '---' }}</span>
+            <span class="text-xs text-[#8b949e]">{{ (appStats.bestRoi?.roi || 0).toFixed(1) }} pts / G</span>
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <input 
-          v-model="ruleSearchQuery" 
-          type="text" 
-          placeholder="🔍 Search rule (e.g. flowers, total black, high five)..." 
-          class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-xs text-white focus:border-emerald-500 outline-none"
-        >
-
-        <!-- Rule Catalog List -->
-        <div class="space-y-2">
-          <div 
-            v-for="(rule, idx) in filteredRules" 
-            :key="idx" 
-            class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 text-xs"
-          >
-            <div class="flex items-center gap-2.5 min-w-0">
-              <span class="text-base shrink-0">{{ rule.points > 0 ? '✨' : '⚠️' }}</span>
-              <span class="text-white font-medium break-words">{{ rule.action }}</span>
+        <!-- Trending Bar Chart -->
+        <div class="space-y-4 pt-4 border-t border-[#30363d]">
+          <h3 class="text-xs font-bold text-[#8b949e] flex items-center gap-2">
+            <span>📊</span> TRENDING ROSTER PICKS
+          </h3>
+          
+          <div v-if="appStats.trending.length === 0" class="text-xs text-[#8b949e] py-4 text-center">
+            No artists have been drafted yet.
+          </div>
+          
+          <div v-else class="space-y-3">
+            <div v-for="(artist, idx) in appStats.trending" :key="artist.id" class="space-y-1">
+              <div class="flex justify-between text-xs text-white">
+                <span class="font-bold flex gap-2">
+                  <span class="text-[#8b949e]">{{ idx + 1 }}.</span> {{ artist.name }}
+                </span>
+                <span>{{ artist.picks }} picks</span>
+              </div>
+              <div class="w-full bg-[#0d1117] rounded-full h-2.5 border border-[#30363d] overflow-hidden">
+                <div 
+                  class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" 
+                  :style="{ width: ((artist.picks / appStats.activeRosters) * 100) + '%' }"
+                ></div>
+              </div>
             </div>
-            <span :class="[
-              'px-2.5 py-1 rounded font-bold shrink-0 text-xs',
-              rule.points > 0 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'
-            ]">
-              {{ rule.points > 0 ? '+' + rule.points : rule.points }} pts
-            </span>
-          </div>
-
-          <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-6">
-            No bonus or malus rules match your search query.
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- VIEW: EVENT LOG -->
+    <!-- EVENT LOG -->
     <section v-if="activeTab === 'logs'" class="space-y-4">
       <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
@@ -525,7 +548,60 @@
       </div>
     </section>
 
-    <!-- VIEW 5: ADMIN CONSOLE -->
+    <!-- LISTS (BONUS & MALUS CATALOG) -->
+    <section v-if="activeTab === 'lists'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#30363d] pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📜</span> LISTS
+            </h2>
+            <p class="text-xs text-[#8b949e]">Official Bonus & Malus Catalog for fantaIPICS 2026</p>
+          </div>
+
+          <!-- Type Filter -->
+          <div class="flex gap-1 bg-[#0d1117] p-1 rounded-lg border border-[#30363d] text-xs">
+            <button @click="ruleFilter = 'all'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'all' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">All</button>
+            <button @click="ruleFilter = 'bonus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'bonus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Bonuses (+)</button>
+            <button @click="ruleFilter = 'malus'" :class="['px-2.5 py-1 rounded transition', ruleFilter === 'malus' ? 'bg-emerald-600 text-white font-bold' : 'text-[#8b949e]']">Maluses (-)</button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <input 
+          v-model="ruleSearchQuery" 
+          type="text" 
+          placeholder="🔍 Search rule (e.g. forget poster, vomits...)" 
+          class="w-full bg-[#0d1117] border border-[#30363d] rounded-lg p-2.5 text-xs text-white focus:border-emerald-500 outline-none"
+        >
+
+        <!-- Rule Catalog List -->
+        <div class="space-y-2">
+          <div 
+            v-for="(rule, idx) in filteredRules" 
+            :key="idx" 
+            class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 text-xs"
+          >
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="text-base shrink-0">{{ rule.points > 0 ? '✨' : '⚠️' }}</span>
+              <span class="text-white font-medium break-words">{{ rule.action }}</span>
+            </div>
+            <span :class="[
+              'px-2.5 py-1 rounded font-bold shrink-0 text-xs',
+              rule.points > 0 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'
+            ]">
+              {{ rule.points > 0 ? '+' + rule.points : rule.points }} pts
+            </span>
+          </div>
+
+          <div v-if="filteredRules.length === 0" class="text-center text-xs text-[#8b949e] py-6">
+            No bonus or malus rules match your search query.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN CONSOLE -->
     <section v-if="activeTab === 'admin'" class="space-y-4">
       
       <!-- Password Lock Screen -->
@@ -693,6 +769,7 @@
         { id: 'readme', label: 'README', icon: '📄' },
         { id: 'draft', label: 'ROSTER', icon: '✏️' },
         { id: 'leaderboard', label: 'LEADERBOARD', icon: '📊' },
+        { id: 'stats', label: 'STATS', icon: '📈' },
         { id: 'lists', label: 'LISTS', icon: '📜' },
         { id: 'logs', label: 'EVENT LOG', icon: '🕒' },
         { id: 'admin', label: 'ADMIN', icon: '🎛️' }
@@ -939,6 +1016,44 @@
         });
       });
 
+      // --- STATS LOGIC ---
+      const appStats = computed(() => {
+        // Tally how many times each artist is picked
+        const pickCounts = {};
+        artists.value.forEach(a => pickCounts[a.id] = 0);
+        
+        let activeRosters = 0;
+        participants.value.forEach(p => {
+          if (p.roster && p.roster.length > 0) {
+            activeRosters++;
+            p.roster.forEach(artistId => {
+              if (pickCounts[artistId] !== undefined) pickCounts[artistId]++;
+            });
+          }
+        });
+
+        // Enrich artists with pick counts and ROI (Points per Giuliani)
+        const enrichedArtists = artists.value.map(a => ({
+          ...a,
+          picks: pickCounts[a.id],
+          roi: a.price > 0 ? (a.points / a.price) : 0
+        }));
+
+        // Calculate specific stats
+        const mvp = [...enrichedArtists].sort((a, b) => b.points - a.points)[0];
+        const flop = [...enrichedArtists].sort((a, b) => a.points - b.points)[0];
+        const mostPicked = [...enrichedArtists].sort((a, b) => b.picks - a.picks)[0];
+        const bestRoi = [...enrichedArtists].sort((a, b) => b.roi - a.roi)[0];
+
+        // Top 5 trending (must be picked at least once)
+        const trending = [...enrichedArtists]
+          .filter(a => a.picks > 0)
+          .sort((a, b) => b.picks - a.picks)
+          .slice(0, 5);
+
+        return { mvp, flop, mostPicked, bestRoi, trending, activeRosters: activeRosters || 1 };
+      });
+      
       const isArtistSelected = (artistId) => {
         const roster = currentParticipant.value?.roster || [];
         return roster.includes(artistId);
@@ -1134,7 +1249,8 @@
         adminEventNote, adminToastMessage, authenticateAdmin, updatePasscode, submitAdminPoints,
         loadFromCloud,
         resetAllPoints,
-        showSelfSelectionModal
+        showSelfSelectionModal,
+        appStats
       };
     }
   }).mount('#app');
