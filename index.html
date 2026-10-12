@@ -456,15 +456,33 @@
             <span class="text-2xl mt-1">🏆</span>
             <span class="text-[10px] text-amber-400 font-bold tracking-wider">TOP SCORER</span>
             <span class="text-sm font-bold text-white truncate w-full">{{ appStats.mvp?.name || '---' }}</span>
-            <span class="text-xs text-[#8b949e]">{{ appStats.mvp?.points || 0 }} pts</span>
+            <div class="flex flex-col items-center leading-tight">
+              <span class="text-xs text-[#8b949e]">{{ appStats.mvp?.points || 0 }} pts</span>
+              <span v-if="appStats.mvp?.actionCount > 0" class="text-[10px] text-[#8b949e] opacity-75 mt-0.5">
+                in {{ appStats.mvp.actionCount }} actions
+              </span>
+            </div>
           </div>
           
-          <!-- Flop -->
+          <!-- Top Negative Scorer -->
           <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
             <span class="text-2xl mt-1">📉</span>
-            <span class="text-[10px] text-red-400 font-bold tracking-wider">BIGGEST FLOP</span>
-            <span class="text-sm font-bold text-white truncate w-full">{{ appStats.flop?.name || '---' }}</span>
-            <span class="text-xs text-[#8b949e]">{{ appStats.flop?.points || 0 }} pts</span>
+            <span class="text-[10px] text-red-400 font-bold tracking-wider">TOP NEGATIVE SCORER</span>
+            
+            <template v-if="appStats.topNegative">
+              <span class="text-sm font-bold text-white truncate w-full">{{ appStats.topNegative.name }}</span>
+              <div class="flex flex-col items-center leading-tight">
+                <span class="text-xs text-[#8b949e]">{{ appStats.topNegative.negativePoints }} pts</span>
+                <span v-if="appStats.topNegative.negativeActionCount > 0" class="text-[10px] text-[#8b949e] opacity-75 mt-0.5">
+                  in {{ appStats.topNegative.negativeActionCount }} maluses
+                </span>
+              </div>
+            </template>
+            
+            <template v-else>
+              <span class="text-sm font-bold text-[#8b949e] truncate w-full mt-1">None yet!</span>
+              <span class="text-[10px] text-[#8b949e] opacity-75 mt-0.5">No maluses assigned</span>
+            </template>
           </div>
 
           <!-- Crowd Favorite -->
@@ -1020,10 +1038,29 @@
 
       // --- STATS LOGIC ---
       const appStats = computed(() => {
-        // Tally how many times each artist is picked
         const pickCounts = {};
-        artists.value.forEach(a => pickCounts[a.id] = 0);
+        const actionCounts = {};
+        const negativePoints = {}; 
+        const negativeActionCount = {}; 
         
+        artists.value.forEach(a => {
+          pickCounts[a.id] = 0;
+          actionCounts[a.id] = 0;
+          negativePoints[a.id] = 0;
+          negativeActionCount[a.id] = 0;
+        });
+        
+        // Tally actions and separate out the negative ones from the audit log
+        auditLog.value.forEach(log => {
+          if (actionCounts[log.artistId] !== undefined) {
+            actionCounts[log.artistId]++;
+            if (log.delta < 0) {
+              negativePoints[log.artistId] += log.delta;
+              negativeActionCount[log.artistId]++;
+            }
+          }
+        });
+
         let activeRosters = 0;
         participants.value.forEach(p => {
           if (p.roster && p.roster.length > 0) {
@@ -1034,26 +1071,38 @@
           }
         });
 
-        // Enrich artists with pick counts and ROI (Points per Giuliani)
         const enrichedArtists = artists.value.map(a => ({
           ...a,
           picks: pickCounts[a.id],
+          actionCount: actionCounts[a.id],
+          negativePoints: negativePoints[a.id], // <-- NEW: Attach to artist
+          negativeActionCount: negativeActionCount[a.id], // <-- NEW: Attach to artist
           roi: a.price > 0 ? (a.points / a.price) : 0
         }));
 
-        // Calculate specific stats
-        const mvp = [...enrichedArtists].sort((a, b) => b.points - a.points)[0];
-        const flop = [...enrichedArtists].sort((a, b) => a.points - b.points)[0];
+        const mvp = [...enrichedArtists].sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          return b.actionCount - a.actionCount;
+        })[0];
+        
+        // Top Negative Scorer calculation: Only consider players who have received maluses
+        const negativeCandidates = [...enrichedArtists].filter(a => a.negativePoints < 0);
+        const topNegative = negativeCandidates.length > 0 
+          ? negativeCandidates.sort((a, b) => {
+              if (a.negativePoints !== b.negativePoints) return a.negativePoints - b.negativePoints; // Lowest (most negative) first
+              return b.negativeActionCount - a.negativeActionCount; // Tie-breaker: most maluses wins
+            })[0] 
+          : null;
+
         const mostPicked = [...enrichedArtists].sort((a, b) => b.picks - a.picks)[0];
         const bestRoi = [...enrichedArtists].sort((a, b) => b.roi - a.roi)[0];
 
-        // Top 5 trending (must be picked at least once)
         const trending = [...enrichedArtists]
           .filter(a => a.picks > 0)
           .sort((a, b) => b.picks - a.picks)
           .slice(0, 5);
 
-        return { mvp, flop, mostPicked, bestRoi, trending, activeRosters: activeRosters || 1 };
+        return { mvp, topNegative, mostPicked, bestRoi, trending, activeRosters: activeRosters || 1 };
       });
       
       const isArtistSelected = (artistId) => {
