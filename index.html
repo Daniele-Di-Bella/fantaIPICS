@@ -492,6 +492,39 @@
       </div>
     </section>
 
+    <!-- VIEW: EVENT LOG -->
+    <section v-if="activeTab === 'logs'" class="space-y-4">
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🕒</span> EVENT LOG
+          </h2>
+        </div>
+
+        <!-- Authorized View -->
+        <div v-if="isIdentityLocked && currentParticipant.isLocked">
+          <div v-if="auditLog.length === 0" class="text-xs text-[#8b949e] py-4 text-center">No event points logged yet.</div>
+          <div class="space-y-2">
+            <div v-for="(log, idx) in auditLog" :key="idx" class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex items-center justify-between gap-3 text-xs">
+              <span class="text-white"><strong>{{ getArtistName(log.artistId) }}</strong>: {{ log.note }}</span>
+              <span :class="log.delta >= 0 ? 'text-emerald-400' : 'text-red-400'" class="font-bold shrink-0 ml-2">
+                {{ log.delta >= 0 ? '+' + log.delta : log.delta }} pts
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unauthorized View -->
+        <div v-else class="text-center py-10 space-y-3">
+          <div class="text-4xl">🔒</div>
+          <h3 class="text-amber-400 font-bold text-sm">Access Restricted</h3>
+          <p class="text-xs text-[#8b949e] max-w-xs mx-auto">
+            You must lock your identity and seal your roster to view the event history.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- VIEW 5: ADMIN CONSOLE -->
     <section v-if="activeTab === 'admin'" class="space-y-4">
       
@@ -578,7 +611,7 @@
 
         <!-- Audit Log -->
         <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 space-y-2 font-mono">
-          <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">📜 Event Log History</div>
+          <div class="text-xs font-bold text-white border-b border-[#30363d] pb-2">🕒 Event Log History</div>
           <div v-if="auditLog.length === 0" class="text-xs text-[#8b949e] py-2">No event points logged yet.</div>
           <div v-for="(log, idx) in auditLog" :key="idx" class="text-xs p-2.5 bg-[#0d1117] rounded-lg border border-[#30363d] flex justify-between items-center">
             <span class="text-white"><strong>{{ getArtistName(log.artistId) }}</strong>: {{ log.note }}</span>
@@ -626,6 +659,22 @@
     </div>
   </div>
 
+  <!-- SELF-SELECTION WARNING MODAL -->
+  <div v-if="showSelfSelectionModal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 font-mono">
+    <div class="bg-[#161b22] border border-red-800 rounded-xl p-6 max-w-sm w-full space-y-5 shadow-2xl">
+      <div class="text-center space-y-2">
+        <span class="text-4xl">🚨</span>
+        <h3 class="text-base font-bold text-white">Roster Unlocked!</h3>
+        <p class="text-xs text-[#8b949e] leading-relaxed">
+          You chose yourself in your roster. Your roster has been unlocked and will remain unlocked until you reform it by picking someone else in substitution to your name.
+        </p>
+      </div>
+      <button @click="showSelfSelectionModal = false" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition touch-target">
+        I Understand
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -645,11 +694,13 @@
         { id: 'draft', label: 'ROSTER', icon: '✏️' },
         { id: 'leaderboard', label: 'LEADERBOARD', icon: '📊' },
         { id: 'lists', label: 'LISTS', icon: '📜' },
+        { id: 'logs', label: 'EVENT LOG', icon: '🕒' },
         { id: 'admin', label: 'ADMIN', icon: '🎛️' }
       ];
 
       const syncStatus = ref('Synced');
       const showLockModal = ref(false);
+      const showSelfSelectionModal = ref(false);
       const isIdentityLocked = ref(false);
       const isIdentityDropdownOpen = ref(false);
 
@@ -1007,10 +1058,29 @@
             }
             auditLog.value = data.record.auditLog || [];
             syncStatus.value = 'Synced';
+            
+            checkSelfSelection(); 
           }
         } catch (e) {
           console.error("Cloud fetch error:", e);
           syncStatus.value = 'Offline';
+        }
+      };
+
+      const checkSelfSelection = () => {
+        if (!isIdentityLocked.value || !currentParticipant.value?.isLocked) return;
+        
+        // Check if any selected artist's name contains the participant's name
+        const hasSelfSelected = currentParticipant.value.roster.some(artistId => {
+          const artist = artists.value.find(a => a.id === artistId);
+          return artist && artist.name.includes(currentParticipant.value.name);
+        });
+
+        if (hasSelfSelected) {
+          // Unlock the roster and trigger the cloud save
+          currentParticipant.value.isLocked = false;
+          showSelfSelectionModal.value = true;
+          saveToCloud();
         }
       };
 
@@ -1063,7 +1133,8 @@
         isAdminAuthenticated, adminPinInput, newAdminPasscode, adminSelectedArtistId, adminPointsDelta,
         adminEventNote, adminToastMessage, authenticateAdmin, updatePasscode, submitAdminPoints,
         loadFromCloud,
-        resetAllPoints
+        resetAllPoints,
+        showSelfSelectionModal
       };
     }
   }).mount('#app');
