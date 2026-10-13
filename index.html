@@ -502,6 +502,21 @@
           </div>
         </div>
 
+        <!-- Most Active / Best Player Banner -->
+        <div class="bg-indigo-950/40 border border-indigo-800/60 rounded-xl p-4 flex items-center justify-between shadow-sm mt-4">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">🎭</span>
+            <div>
+              <div class="text-[10px] text-indigo-400 font-bold tracking-wider">MOST ACTIVE PLAYER</div>
+              <div class="text-sm font-bold text-white">{{ appStats.mostActive?.name || '---' }}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-bold text-white">{{ appStats.mostActive?.actionCount || 0 }}</div>
+            <div class="text-[10px] text-[#8b949e]">Total Actions</div>
+          </div>
+        </div>
+
         <!-- Trending Bar Chart -->
         <div class="space-y-4 pt-4 border-t border-[#30363d]">
           <h3 class="text-xs font-bold text-[#8b949e] flex items-center gap-2">
@@ -617,6 +632,73 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- VIEW: TIPS -->
+    <section v-if="activeTab === 'tips'" class="space-y-6">
+      
+      <!-- Buffet Affluence Tracker -->
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🍳</span> BUFFET TRACKER
+          </h2>
+        </div>
+
+        <!-- Submit Form -->
+        <div class="flex gap-2 text-xs">
+          <select v-model="newAffluence.meal" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none">
+            <option>Breakfast</option>
+            <option>Lunch</option>
+          </select>
+          <input v-model="newAffluence.time" type="time" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none">
+          <select v-model="newAffluence.level" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none flex-1">
+            <option value="Low">Low 🟢</option>
+            <option value="Moderate">Moderate 🟡</option>
+            <option value="High">High 🔴</option>
+          </select>
+          <button @click="submitAffluence" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg px-4 transition">Log</button>
+        </div>
+
+        <!-- Logged Data Timeline -->
+        <div class="space-y-2 mt-4">
+          <div v-for="(log, idx) in affluenceLogs" :key="idx" class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex justify-between items-center text-xs">
+            <div class="text-white"><strong>{{ log.meal }}</strong> @ {{ log.time }}</div>
+            <span :class="{
+              'bg-emerald-950 text-emerald-400 border-emerald-800': log.level === 'Low',
+              'bg-amber-950 text-amber-400 border-amber-800': log.level === 'Moderate',
+              'bg-red-950 text-red-400 border-red-800': log.level === 'High'
+            }" class="px-2 py-1 border rounded font-bold">
+              {{ log.level }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Music Session -->
+      <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
+        <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🎧</span> MUSIC SESSIONS
+          </h2>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <a href="https://open.spotify.com/playlist/495FpfpXYmSIfKm3QQsYWW?si=oFE83YtBTJuXRxYRZNTDFw&utm_source=copy-link&pi=O-M1bZT8SJurs" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xl mb-1">💻</div>
+            <div class="text-sm font-bold text-white">To Work Better</div>
+          </a>
+          <a href="https://open.spotify.com/playlist/6S15LQBRSf7Rt8zrlrjwLC?si=WHMSe99cTtmcVG1HMjrAlQ&utm_source=copy-link" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xl mb-1">⚡</div>
+            <div class="text-sm font-bold text-white">To Feel Some BPMs</div>
+          </a>
+          <a href="https://open.spotify.com/album/33RAP9Fz3bR7yBoOw8bsP4?si=irXPYcpLSFKA0W4lcOfv2Q&utm_source=copy-link" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xl mb-1">💿</div>
+            <div class="text-sm font-bold text-white">The Only Vibe</div>
+          </a>
+        </div>
+      </div>
+
     </section>
 
     <!-- ADMIN CONSOLE -->
@@ -797,6 +879,7 @@
         { id: 'stats', label: 'STATS', icon: '📈' },
         { id: 'logs', label: 'EVENT LOG', icon: '🕒' },
         { id: 'lists', label: 'LISTS', icon: '📜' },
+        { id: 'tips', label: 'TIPS', icon: '💡' },
         { id: 'admin', label: 'ADMIN', icon: '🎛️' }
       ];
 
@@ -1087,6 +1170,9 @@
           roi: a.price > 0 ? (a.points / a.price) : 0
         }));
 
+        // Most Active Player (Highest total actionCount)
+        const mostActive = [...enrichedArtists].sort((a, b) => b.actionCount - a.actionCount)[0];
+
         const mvp = [...enrichedArtists].sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           return b.actionCount - a.actionCount;
@@ -1109,8 +1195,25 @@
           .sort((a, b) => b.picks - a.picks)
           .slice(0, 5);
 
-        return { mvp, topNegative, mostPicked, bestRoi, trending, activeRosters: activeRosters || 1 };
+        return { mvp, topNegative, mostPicked, bestRoi, mostActive, trending, activeRosters: activeRosters || 1 };
       });
+
+      // --- TIPS LOGIC ---
+      const affluenceLogs = ref([]); // Start empty, will be populated from the cloud
+      const newAffluence = ref({ meal: 'Breakfast', time: '07:15', level: 'High' });
+
+      const submitAffluence = async () => {
+        if (newAffluence.value.time) {
+          // Add the new measurement to the beginning of the list
+          affluenceLogs.value.unshift({ ...newAffluence.value });
+          
+          // Save to the cloud so everyone sees it
+          await saveToCloud();
+          
+          adminToastMessage.value = 'Affluence logged to the cloud!';
+          setTimeout(() => adminToastMessage.value = '', 3000);
+        }
+      };
       
       const isArtistSelected = (artistId) => {
         const roster = currentParticipant.value?.roster || [];
@@ -1251,6 +1354,7 @@
               }));
             }
             auditLog.value = data.record.auditLog || [];
+            affluenceLogs.value = data.record.affluenceLogs || [];
             syncStatus.value = 'Synced';
             
             checkSelfSelection(); 
@@ -1290,7 +1394,8 @@
             body: JSON.stringify({
               artists: artists.value,
               participants: participants.value,
-              auditLog: auditLog.value
+              auditLog: auditLog.value,
+              affluenceLogs: affluenceLogs.value
             })
           });
           syncStatus.value = 'Synced';
