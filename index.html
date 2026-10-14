@@ -1338,39 +1338,117 @@
         setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
-      // 2. FIXED FETCH FUNCTION
-      const loadFromCloud = async () => {
+      // 2. ROBUST FETCH FUNCTION
+        const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
+
         try {
-          const res = await fetch(`${RAW_GIST_URL}?t=${Date.now()}`);
-          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+          // Fetch the Gist object through the GitHub API.
+          const res = await fetch(BASE_URL, {
+            headers: {
+              'Accept': 'application/vnd.github+json'
+            },
+            cache: 'no-store'
+          });
 
-          const record = await res.json();
+          if (!res.ok) {
+            const details = await res.text();
 
-          if (record && record.artists) {
-            artists.value.forEach(localA => {
-              const cloudA = record.artists.find(ca => ca.id === localA.id);
-              if (cloudA) {
-                localA.points = cloudA.points || 0;
-              }
-            });
-
-            if (Array.isArray(record.participants) && record.participants.length > 0) {
-              participants.value = record.participants.map(p => ({
-                ...p,
-                roster: Array.isArray(p.roster) ? p.roster : []
-              }));
-            }
-            auditLog.value = record.auditLog || [];
-            affluenceLogs.value = record.affluenceLogs || [];
-            
-            isDataLoaded.value = true;
-            syncStatus.value = 'Synced';
-            
-            checkSelfSelection(); 
+            throw new Error(
+              `GitHub API error ${res.status}: ${details.slice(0, 300)}`
+            );
           }
-        } catch (e) {
-          console.error("Gist fetch error:", e);
+
+          // Parse the GitHub API response.
+          const gist = await res.json();
+
+          // Verify that the expected database file exists.
+          const file = gist.files?.[FILE_NAME];
+
+          if (!file) {
+            throw new Error(
+              `The Gist does not contain the expected file: ${FILE_NAME}. ` +
+              `Available files: ${Object.keys(gist.files || {}).join(', ')}`
+            );
+          }
+
+          // GitHub may omit content when a file is too large.
+          if (typeof file.content !== 'string' || !file.content.trim()) {
+            throw new Error(
+              `The content of ${FILE_NAME} is missing or empty in the Gist API response.`
+            );
+          }
+
+          // Parse the JSON stored inside the Gist.
+          let record;
+
+          try {
+            record = JSON.parse(file.content);
+          } catch (error) {
+            console.error(
+              'Invalid JSON inside the Gist file:',
+              file.content.slice(0, 500)
+            );
+
+            throw new Error(
+              `The Gist file contains invalid JSON: ${error.message}`
+            );
+          }
+
+          // Validate the minimum required database structure.
+          if (
+            !record ||
+            typeof record !== 'object' ||
+            !Array.isArray(record.artists) ||
+            !Array.isArray(record.participants)
+          ) {
+            throw new Error(
+              'The database must contain artists and participants arrays.'
+            );
+          }
+
+          // Update artist scores without replacing the application catalogue.
+          artists.value.forEach(localArtist => {
+            const cloudArtist = record.artists.find(
+              artist => artist.id === localArtist.id
+            );
+
+            if (cloudArtist && Number.isFinite(cloudArtist.points)) {
+              localArtist.points = cloudArtist.points;
+            }
+          });
+
+          // Restore participants and their saved rosters.
+          participants.value = record.participants.map(participant => ({
+            ...participant,
+            roster: Array.isArray(participant.roster)
+              ? participant.roster
+              : []
+          }));
+
+          // Restore event and buffet logs.
+          auditLog.value = Array.isArray(record.auditLog)
+            ? record.auditLog
+            : [];
+
+          affluenceLogs.value = Array.isArray(record.affluenceLogs)
+            ? record.affluenceLogs
+            : [];
+
+          // Mark the initial load as successful only after validation.
+          isDataLoaded.value = true;
+          syncStatus.value = 'Synced';
+
+          console.info('fantaIPICS database loaded successfully.', {
+            artists: record.artists.length,
+            participants: record.participants.length,
+            auditEvents: auditLog.value.length
+          });
+
+          checkSelfSelection();
+
+        } catch (error) {
+          console.error('Gist fetch error:', error);
           syncStatus.value = 'Offline';
         }
       };
