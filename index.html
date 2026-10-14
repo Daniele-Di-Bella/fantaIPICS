@@ -725,6 +725,25 @@
         </button>
       </div>
 
+      <!-- Gist Token Input Field -->
+          <div class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg space-y-2 font-mono text-xs">
+            <label class="text-[#8b949e] font-bold">🔑 GitHub Access Token:</label>
+            <div class="flex gap-2">
+              <input 
+                v-model="GITHUB_TOKEN" 
+                type="password" 
+                placeholder="Paste github_pat_... here"
+                class="flex-1 bg-[#161b22] border border-[#30363d] rounded p-2 text-white outline-none focus:border-emerald-500"
+              >
+              <button 
+                @click="saveToken" 
+                class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded"
+              >
+                Save Token
+              </button>
+            </div>
+          </div>
+
       <!-- Authenticated Console -->
       <div v-else class="space-y-4">
         <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
@@ -867,9 +886,13 @@
     setup() {
       // GITHUB GIST API CREDENTIALS
       const GIST_ID = "1ef68fcef07fb6b1b79197c872256bc4";
-      const GITHUB_TOKEN = "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";
-      const BASE_URL = `https://api.github.com/gists/${GIST_ID}`;
       const FILE_NAME = "fantaIPICS_db.json";
+
+      // Raw URL for free, token-less public reads by all users
+      const RAW_GIST_URL = `https://gist.githubusercontent.com/raw/${GIST_ID}/${FILE_NAME}`;
+      
+      // Token stored in browser storage (only needed on admin devices for writing)
+      const GITHUB_TOKEN = ref(localStorage.getItem('fanta_gist_token') || '');
 
       // Tab Navigation (Clean Strings without extensions)
       const activeTab = ref('readme');
@@ -1036,7 +1059,13 @@
       const auditLog = ref([]);
       const selectedParticipantId = ref(101);
 
-      
+      const saveToken = () => {
+        localStorage.setItem('fanta_gist_token', GITHUB_TOKEN.value);
+        adminToastMessage.value = 'Token saved to browser!';
+        setTimeout(() => adminToastMessage.value = '', 3000);
+        loadFromCloud();
+      };
+
       const lockIdentity = () => {
         isIdentityLocked.value = true;
         isIdentityDropdownOpen.value = false;
@@ -1334,40 +1363,34 @@
       const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
         try {
-          const res = await fetch(BASE_URL, {
-            headers: {
-              'Authorization': `Bearer ${GITHUB_TOKEN}`,
-              'Accept': 'application/vnd.github.v3+json'
-            }
-          });
-          const gistData = await res.json();
+          // Read directly from the public raw Gist endpoint (No Token Needed!)
+          const res = await fetch(`${RAW_GIST_URL}?t=${Date.now()}`); // timestamp prevents browser caching
           
-          if (gistData.files && gistData.files[FILE_NAME]) {
-            const rawContent = gistData.files[FILE_NAME].content;
-            const record = JSON.parse(rawContent);
+          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
-            if (record.artists) {
-              artists.value.forEach(localA => {
-                const cloudA = record.artists.find(ca => ca.id === localA.id);
-                if (cloudA) {
-                  localA.points = cloudA.points || 0;
-                }
-              });
+          const record = await res.json();
 
-              if (Array.isArray(record.participants) && record.participants.length > 0) {
-                participants.value = record.participants.map(p => ({
-                  ...p,
-                  roster: Array.isArray(p.roster) ? p.roster : []
-                }));
+          if (record.artists) {
+            artists.value.forEach(localA => {
+              const cloudA = record.artists.find(ca => ca.id === localA.id);
+              if (cloudA) {
+                localA.points = cloudA.points || 0;
               }
-              auditLog.value = record.auditLog || [];
-              affluenceLogs.value = record.affluenceLogs || [];
-              
-              isDataLoaded.value = true; // Safety flag
-              syncStatus.value = 'Synced';
-              
-              checkSelfSelection(); 
+            });
+
+            if (Array.isArray(record.participants) && record.participants.length > 0) {
+              participants.value = record.participants.map(p => ({
+                ...p,
+                roster: Array.isArray(p.roster) ? p.roster : []
+              }));
             }
+            auditLog.value = record.auditLog || [];
+            affluenceLogs.value = record.affluenceLogs || [];
+            
+            isDataLoaded.value = true;
+            syncStatus.value = 'Synced';
+            
+            checkSelfSelection(); 
           }
         } catch (e) {
           console.error("Gist fetch error:", e);
