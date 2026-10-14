@@ -725,7 +725,22 @@
         </button>
       </div>
 
-      <!-- Gist Token Input Field -->
+      <!-- Authenticated Console -->
+      <div v-else class="space-y-4">
+        <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
+            <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
+              <span>🎛️</span> ADMIN
+            </h2>
+            <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
+          </div>
+
+          <!-- Admin Toast Notification -->
+          <div v-if="adminToastMessage" class="p-3 bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-mono rounded-lg transition">
+            {{ adminToastMessage }}
+          </div>
+
+          <!-- Gist Token Input Field -->
           <div class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg space-y-2 font-mono text-xs">
             <label class="text-[#8b949e] font-bold">🔑 GitHub Access Token:</label>
             <div class="flex gap-2">
@@ -742,21 +757,6 @@
                 Save Token
               </button>
             </div>
-          </div>
-
-      <!-- Authenticated Console -->
-      <div v-else class="space-y-4">
-        <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4">
-          <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
-            <h2 class="text-lg font-mono font-bold text-white flex items-center gap-2">
-              <span>🎛️</span> ADMIN
-            </h2>
-            <button @click="isAdminAuthenticated = false" class="text-xs font-mono text-red-400 hover:underline">Lock Session</button>
-          </div>
-
-          <!-- Admin Toast Notification -->
-          <div v-if="adminToastMessage" class="p-3 bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs font-mono rounded-lg transition">
-            {{ adminToastMessage }}
           </div>
 
           <!-- Points Input Form -->
