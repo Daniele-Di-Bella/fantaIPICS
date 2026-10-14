@@ -503,7 +503,7 @@
         </div>
 
         <!-- Most Active / Best Player Banner -->
-        <div class="bg-indigo-950/40 border border-indigo-800/60 rounded-xl p-4 flex items-center justify-between shadow-sm mt-4">
+        <div class="bg-[#0d1117] border border-[#30363d] rounded-xl p-3 flex flex-col items-center text-center gap-1.5 shadow-sm">
           <div class="flex items-center gap-3">
             <span class="text-3xl">🎭</span>
             <div>
@@ -637,7 +637,7 @@
     <!-- VIEW: TIPS -->
     <section v-if="activeTab === 'tips'" class="space-y-6">
       
-      <!-- Buffet Affluence Tracker -->
+      <!-- BUFFET TRACKER -->
       <div class="bg-[#161b22] border border-[#30363d] rounded-xl p-4 sm:p-6 space-y-4 font-mono">
         <div class="flex items-center justify-between border-b border-[#30363d] pb-3">
           <h2 class="text-lg font-bold text-white flex items-center gap-2">
@@ -645,32 +645,49 @@
           </h2>
         </div>
 
-        <!-- Submit Form -->
-        <div class="flex gap-2 text-xs">
+        <!-- Responsive Submit Form -->
+        <div class="grid grid-cols-2 sm:flex sm:flex-row gap-2 text-xs">
           <select v-model="newAffluence.meal" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none">
             <option>Breakfast</option>
             <option>Lunch</option>
           </select>
           <input v-model="newAffluence.time" type="time" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none">
-          <select v-model="newAffluence.level" class="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none flex-1">
+          <select v-model="newAffluence.level" class="col-span-2 sm:col-span-1 bg-[#0d1117] border border-[#30363d] rounded-lg p-2 text-white outline-none flex-1">
             <option value="Low">Low 🟢</option>
             <option value="Moderate">Moderate 🟡</option>
             <option value="High">High 🔴</option>
           </select>
-          <button @click="submitAffluence" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg px-4 transition">Log</button>
+          <button @click="submitAffluence" class="col-span-2 sm:col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg p-2 transition">Log</button>
         </div>
 
-        <!-- Logged Data Timeline -->
-        <div class="space-y-2 mt-4">
-          <div v-for="(log, idx) in affluenceLogs" :key="idx" class="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg flex justify-between items-center text-xs">
-            <div class="text-white"><strong>{{ log.meal }}</strong> @ {{ log.time }}</div>
-            <span :class="{
-              'bg-emerald-950 text-emerald-400 border-emerald-800': log.level === 'Low',
-              'bg-amber-950 text-amber-400 border-amber-800': log.level === 'Moderate',
-              'bg-red-950 text-red-400 border-red-800': log.level === 'High'
-            }" class="px-2 py-1 border rounded font-bold">
-              {{ log.level }}
-            </span>
+        <!-- Affluence Timeline Dataviz -->
+        <div class="mt-6 space-y-5 pt-2">
+          <!-- Breakfast Bar -->
+          <div>
+            <div class="text-xs font-bold text-white mb-2 flex items-center justify-between">
+              <span>Breakfast Timeline</span>
+            </div>
+            <div class="flex h-6 rounded-lg overflow-hidden border border-[#30363d] w-full">
+              <div v-for="(bin, i) in affluenceViz.breakfast" :key="'bf'+i" :class="bin.colorClass" class="flex-1 border-r border-[#161b22] last:border-0 transition-colors" :title="bin.time + ' - ' + bin.level"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-[#8b949e] mt-1.5">
+              <span>07:00</span>
+              <span>09:00</span>
+            </div>
+          </div>
+
+          <!-- Lunch Bar -->
+          <div>
+            <div class="text-xs font-bold text-white mb-2 flex items-center justify-between">
+              <span>Lunch Timeline</span>
+            </div>
+            <div class="flex h-6 rounded-lg overflow-hidden border border-[#30363d] w-full">
+              <div v-for="(bin, i) in affluenceViz.lunch" :key="'l'+i" :class="bin.colorClass" class="flex-1 border-r border-[#161b22] last:border-0 transition-colors" :title="bin.time + ' - ' + bin.level"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-[#8b949e] mt-1.5">
+              <span>12:00</span>
+              <span>13:30</span>
+            </div>
           </div>
         </div>
       </div>
@@ -683,17 +700,18 @@
           </h2>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a href="https://open.spotify.com/playlist/495FpfpXYmSIfKm3QQsYWW?si=oFE83YtBTJuXRxYRZNTDFw&utm_source=copy-link&pi=O-M1bZT8SJurs" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
-            <div class="text-xl mb-1">💻</div>
+        <!-- Centered squares grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <a href="https://open.spotify.com/playlist/495FpfpXYmSIfKm3QQsYWW?si=oFE83YtBTJuXRxYRZNTDFw&utm_source=copy-link&pi=O-M1bZT8SJurs" target="_blank" class="flex flex-col items-center justify-center text-center p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm aspect-square">
+            <div class="text-3xl mb-2">💻</div>
             <div class="text-sm font-bold text-white">To Work Better</div>
           </a>
-          <a href="https://open.spotify.com/playlist/6S15LQBRSf7Rt8zrlrjwLC?si=WHMSe99cTtmcVG1HMjrAlQ&utm_source=copy-link" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
-            <div class="text-xl mb-1">⚡</div>
+          <a href="https://open.spotify.com/playlist/6S15LQBRSf7Rt8zrlrjwLC?si=WHMSe99cTtmcVG1HMjrAlQ&utm_source=copy-link" target="_blank" class="flex flex-col items-center justify-center text-center p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm aspect-square">
+            <div class="text-3xl mb-2">⚡</div>
             <div class="text-sm font-bold text-white">To Feel Some BPMs</div>
           </a>
-          <a href="https://open.spotify.com/album/33RAP9Fz3bR7yBoOw8bsP4?si=irXPYcpLSFKA0W4lcOfv2Q&utm_source=copy-link" target="_blank" class="block p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm">
-            <div class="text-xl mb-1">💿</div>
+          <a href="https://open.spotify.com/album/33RAP9Fz3bR7yBoOw8bsP4?si=irXPYcpLSFKA0W4lcOfv2Q&utm_source=copy-link" target="_blank" class="col-span-2 sm:col-span-1 flex flex-col items-center justify-center text-center p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-emerald-500 transition shadow-sm aspect-square">
+            <div class="text-3xl mb-2">💿</div>
             <div class="text-sm font-bold text-white">The Only Vibe</div>
           </a>
         </div>
@@ -1528,6 +1546,68 @@
         setInterval(loadFromCloud, 30000);
       });
 
+      // --- BUFFET DATAVIZ LOGIC ---
+      const getMinutes = (timeStr) => {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+      };
+
+      const affluenceViz = computed(() => {
+        const createBins = (startH, endH, endM) => {
+          const bins = [];
+          let current = startH * 60;
+          const end = endH * 60 + endM;
+          while(current < end) {
+            const h = Math.floor(current/60).toString().padStart(2, '0');
+            const m = (current%60).toString().padStart(2, '0');
+            bins.push({ time: `${h}:${m}`, start: current, end: current + 15, scores: [] });
+            current += 15;
+          }
+          return bins;
+        };
+
+        const breakfastBins = createBins(7, 9, 0); // 07:00 to 09:00
+        const lunchBins = createBins(12, 13, 30); // 12:00 to 13:30
+
+        const levelScore = { 'Low': 1, 'Moderate': 2, 'High': 3 };
+
+        affluenceLogs.value.forEach(log => {
+          if (!log.time) return;
+          const logMin = getMinutes(log.time);
+          const score = levelScore[log.level];
+          
+          if (log.meal === 'Breakfast') {
+            const bin = breakfastBins.find(b => logMin >= b.start && logMin < b.end);
+            if (bin) bin.scores.push(score);
+          } else if (log.meal === 'Lunch') {
+            const bin = lunchBins.find(b => logMin >= b.start && logMin < b.end);
+            if (bin) bin.scores.push(score);
+          }
+        });
+
+        const getStyle = (scores) => {
+          if (scores.length === 0) return { class: 'bg-[#21262d]', label: 'No Data' };
+          const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+          
+          if (avg <= 1.25) return { class: 'bg-emerald-500', label: 'Low' };
+          if (avg <= 1.75) return { class: 'bg-lime-400', label: 'Low/Moderate' };
+          if (avg <= 2.25) return { class: 'bg-yellow-400', label: 'Moderate' };
+          if (avg <= 2.75) return { class: 'bg-orange-500', label: 'Moderate/High' };
+          return { class: 'bg-red-500', label: 'High' };
+        };
+
+        return {
+          breakfast: breakfastBins.map(b => {
+            const style = getStyle(b.scores);
+            return { ...b, colorClass: style.class, level: style.label };
+          }),
+          lunch: lunchBins.map(b => {
+            const style = getStyle(b.scores);
+            return { ...b, colorClass: style.class, level: style.label };
+          })
+        };
+      });
+
       // 4. FIXED RETURN OBJECT (Includes all missing refs)
       return {
         activeTab, tabs, syncStatus, artists, participants, auditLog,
@@ -1545,6 +1625,7 @@
         appStats, 
         removeLog, 
         affluenceLogs, newAffluence, submitAffluence,
+        affluenceViz,
         GITHUB_TOKEN, saveToken 
       };
     }
