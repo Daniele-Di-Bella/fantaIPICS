@@ -217,7 +217,7 @@
                 </a>. Mind that, in order to be considered, a report must be accompanied by a pic, a video or a statement from at least one other colleague (a witness). The admin will then verify the action and award or deduct points accordingly.</li>
             </li>
             <li>Keep the <strong class="text-white">📊 LEADERBOARD</strong> checked to follow the progress of your team. The leaderboard is updated 
-                in real-time as points are awarded or deducted, but if you are impatient press the refresh button 🔄 in the upper right corner.</li>
+                every 30 seconds, but if you are impatient to see if points have changed, press the refresh button 🔄 in the upper right corner.</li>
           </ol>
         </div>
 
@@ -865,10 +865,11 @@
 
   createApp({
     setup() {
-      // JSONBIN API CREDENTIALS
-      const BIN_ID = "6ac6655cffd5d16053566a72";
-      const API_KEY = "$2a$10$GDtAx33.KX./RChld5Nt2ernrPH1jlPr5vYqgzbTrsOS9ty60K5IC";
-      const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+      // GITHUB GIST API CREDENTIALS
+      const GIST_ID = "1ef68fcef07fb6b1b79197c872256bc4";
+      const GITHUB_TOKEN = "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";
+      const BASE_URL = `https://api.github.com/gists/${GIST_ID}`;
+      const FILE_NAME = "fantaIPICS_db.json";
 
       // Tab Navigation (Clean Strings without extensions)
       const activeTab = ref('readme');
@@ -1333,34 +1334,43 @@
       const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
         try {
-          const res = await fetch(`${BASE_URL}/latest`, {
-            headers: { 'X-Master-Key': API_KEY }
-          });
-          const data = await res.json();
-          if (data.record && data.record.artists) {
-            // Merge loaded points into artists list
-            const cloudArtists = data.record.artists;
-            artists.value.forEach(localA => {
-              const cloudA = cloudArtists.find(ca => ca.id === localA.id);
-              if (cloudA) {
-                localA.points = cloudA.points || 0;
-              }
-            });
-
-            if (Array.isArray(data.record.participants) && data.record.participants.length > 0) {
-              participants.value = data.record.participants.map(p => ({
-                ...p,
-                roster: Array.isArray(p.roster) ? p.roster : []
-              }));
+          const res = await fetch(BASE_URL, {
+            headers: {
+              'Authorization': `Bearer ${GITHUB_TOKEN}`,
+              'Accept': 'application/vnd.github.v3+json'
             }
-            auditLog.value = data.record.auditLog || [];
-            affluenceLogs.value = data.record.affluenceLogs || [];
-            syncStatus.value = 'Synced';
-            
-            checkSelfSelection(); 
+          });
+          const gistData = await res.json();
+          
+          if (gistData.files && gistData.files[FILE_NAME]) {
+            const rawContent = gistData.files[FILE_NAME].content;
+            const record = JSON.parse(rawContent);
+
+            if (record.artists) {
+              artists.value.forEach(localA => {
+                const cloudA = record.artists.find(ca => ca.id === localA.id);
+                if (cloudA) {
+                  localA.points = cloudA.points || 0;
+                }
+              });
+
+              if (Array.isArray(record.participants) && record.participants.length > 0) {
+                participants.value = record.participants.map(p => ({
+                  ...p,
+                  roster: Array.isArray(p.roster) ? p.roster : []
+                }));
+              }
+              auditLog.value = record.auditLog || [];
+              affluenceLogs.value = record.affluenceLogs || [];
+              
+              isDataLoaded.value = true; // Safety flag
+              syncStatus.value = 'Synced';
+              
+              checkSelfSelection(); 
+            }
           }
         } catch (e) {
-          console.error("Cloud fetch error:", e);
+          console.error("Gist fetch error:", e);
           syncStatus.value = 'Offline';
         }
       };
@@ -1383,24 +1393,38 @@
       };
 
       const saveToCloud = async () => {
+        if (!isDataLoaded.value) {
+          console.warn("Blocked saveToCloud: Initial data has not loaded yet.");
+          return;
+        }
+
         syncStatus.value = 'Saving...';
         try {
+          const payload = {
+            artists: artists.value,
+            participants: participants.value,
+            auditLog: auditLog.value,
+            affluenceLogs: affluenceLogs.value
+          };
+
           await fetch(BASE_URL, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
-              'Content-Type': 'application/json',
-              'X-Master-Key': API_KEY
+              'Authorization': `Bearer ${GITHUB_TOKEN}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              artists: artists.value,
-              participants: participants.value,
-              auditLog: auditLog.value,
-              affluenceLogs: affluenceLogs.value
+              files: {
+                [FILE_NAME]: {
+                  content: JSON.stringify(payload, null, 2)
+                }
+              }
             })
           });
           syncStatus.value = 'Synced';
         } catch (e) {
-          console.error("Cloud save error:", e);
+          console.error("Gist save error:", e);
           syncStatus.value = 'Error Saving';
         }
       };
@@ -1418,7 +1442,7 @@
         }
 
         loadFromCloud();
-        setInterval(loadFromCloud, 10000); // Polling cloud sync every 10s
+        setInterval(loadFromCloud, 30000); // Polling cloud sync every 30s
       });
 
       return {
