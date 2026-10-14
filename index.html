@@ -884,17 +884,20 @@
 
   createApp({
     setup() {
-      // GITHUB GIST API CREDENTIALS
+      // 1. GITHUB GIST CREDENTIALS
+      const GITHUB_USERNAME = "Daniele-Di-Bella"; // Replace with your GitHub Username if different
       const GIST_ID = "1ef68fcef07fb6b1b79197c872256bc4";
       const FILE_NAME = "fantaIPICS_db.json";
 
-      // Raw URL for free, token-less public reads by all users
-      const RAW_GIST_URL = `https://gist.githubusercontent.com/raw/${GIST_ID}/${FILE_NAME}`;
+      // Endpoint URLs
+      const BASE_URL = `https://api.github.com/gists/${GIST_ID}`;
+      const RAW_GIST_URL = `https://gist.githubusercontent.com/${GITHUB_USERNAME}/${GIST_ID}/raw/${FILE_NAME}`;
       
-      // Token stored in browser storage (only needed on admin devices for writing)
+      // Token stored in browser storage (needed on admin/user device for saving)
       const GITHUB_TOKEN = ref(localStorage.getItem('fanta_gist_token') || '');
+      const isDataLoaded = ref(false); // Fix: declared safety flag
 
-      // Tab Navigation (Clean Strings without extensions)
+      // Tab Navigation
       const activeTab = ref('readme');
       const tabs = [
         { id: 'readme', label: 'README', icon: '📄' },
@@ -923,44 +926,37 @@
       const adminEventNote = ref('Dances with PhD student');
       const adminToastMessage = ref('');
 
-    const resetAllPoints = async () => {
-    if (!confirm("Are you sure you want to reset all artist points and clear the event log?")) return;
-    
-    // 1. Reset all artist scores to 0
-    artists.value.forEach(artist => {
-        artist.points = 0;
-    });
+      const saveToken = () => {
+        localStorage.setItem('fanta_gist_token', GITHUB_TOKEN.value);
+        adminToastMessage.value = 'Token saved to browser!';
+        setTimeout(() => adminToastMessage.value = '', 3000);
+        loadFromCloud();
+      };
 
-    // 2. Clear event log history
-    auditLog.value = [];
-
-    // 3. Sync changes to cloud database
-    await saveToCloud();
-
-    adminToastMessage.value = 'All artist points and logs have been reset to 0!';
-    setTimeout(() => adminToastMessage.value = '', 4000);
-    };
+      const resetAllPoints = async () => {
+        if (!confirm("Are you sure you want to reset all artist points and clear the event log?")) return;
+        artists.value.forEach(artist => { artist.points = 0; });
+        auditLog.value = [];
+        await saveToCloud();
+        adminToastMessage.value = 'All artist points and logs have been reset to 0!';
+        setTimeout(() => adminToastMessage.value = '', 4000);
+      };
 
       // Rule catalog state
       const ruleFilter = ref('all');
       const ruleSearchQuery = ref('');
 
-      // DEFAULT ARTIST DATA (3 Giuliani Tiers)
+      // DEFAULT ARTIST DATA
       const defaultArtists = [
-        // Category 1: 16 Giuliani
         { id: 1, name: "❄️ Carlo", category: 1, price: 16, points: 0 },
         { id: 2, name: "⛵ Barbara", category: 1, price: 16, points: 0 },
         { id: 3, name: "🤡 TJ", category: 1, price: 16, points: 0 },
         { id: 4, name: "🐴 Fabrizio", category: 1, price: 16, points: 0 },
         { id: 5, name: "🍺 Andrea", category: 1, price: 16, points: 0 },
         { id: 6, name: "🐥 Jacopo", category: 1, price: 16, points: 0 },
-
-        // Category 2: 10 Giuliani
         { id: 7, name: "🐒 Daniele", category: 2, price: 10, points: 0 },
         { id: 8, name: "🌋 Federico", category: 2, price: 10, points: 0 },
         { id: 9, name: "🦠 Catherine", category: 2, price: 10, points: 0 },
-
-        // Category 3: 4 Giuliani
         { id: 10, name: "🐦‍⬛ Agnese", category: 3, price: 4, points: 0 },
         { id: 11, name: "🐋 Giulia", category: 3, price: 4, points: 0 },
         { id: 12, name: "😈 Cecilia", category: 3, price: 4, points: 0 },
@@ -1058,13 +1054,6 @@
 
       const auditLog = ref([]);
       const selectedParticipantId = ref(101);
-
-      const saveToken = () => {
-        localStorage.setItem('fanta_gist_token', GITHUB_TOKEN.value);
-        adminToastMessage.value = 'Token saved to browser!';
-        setTimeout(() => adminToastMessage.value = '', 3000);
-        loadFromCloud();
-      };
 
       const lockIdentity = () => {
         isIdentityLocked.value = true;
@@ -1170,7 +1159,6 @@
           negativeActionCount[a.id] = 0;
         });
         
-        // Tally actions and separate out the negative ones from the audit log
         auditLog.value.forEach(log => {
           if (actionCounts[log.artistId] !== undefined) {
             actionCounts[log.artistId]++;
@@ -1195,12 +1183,11 @@
           ...a,
           picks: pickCounts[a.id],
           actionCount: actionCounts[a.id],
-          negativePoints: negativePoints[a.id], // <-- NEW: Attach to artist
-          negativeActionCount: negativeActionCount[a.id], // <-- NEW: Attach to artist
+          negativePoints: negativePoints[a.id],
+          negativeActionCount: negativeActionCount[a.id],
           roi: a.price > 0 ? (a.points / a.price) : 0
         }));
 
-        // Most Active Player (Highest total actionCount)
         const mostActive = [...enrichedArtists].sort((a, b) => b.actionCount - a.actionCount)[0];
 
         const mvp = [...enrichedArtists].sort((a, b) => {
@@ -1208,12 +1195,11 @@
           return b.actionCount - a.actionCount;
         })[0];
         
-        // Top Negative Scorer calculation: Only consider players who have received maluses
         const negativeCandidates = [...enrichedArtists].filter(a => a.negativePoints < 0);
         const topNegative = negativeCandidates.length > 0 
           ? negativeCandidates.sort((a, b) => {
-              if (a.negativePoints !== b.negativePoints) return a.negativePoints - b.negativePoints; // Lowest (most negative) first
-              return b.negativeActionCount - a.negativeActionCount; // Tie-breaker: most maluses wins
+              if (a.negativePoints !== b.negativePoints) return a.negativePoints - b.negativePoints;
+              return b.negativeActionCount - a.negativeActionCount;
             })[0] 
           : null;
 
@@ -1229,17 +1215,13 @@
       });
 
       // --- TIPS LOGIC ---
-      const affluenceLogs = ref([]); // Start empty, will be populated from the cloud
+      const affluenceLogs = ref([]);
       const newAffluence = ref({ meal: 'Breakfast', time: '07:15', level: 'High' });
 
       const submitAffluence = async () => {
         if (newAffluence.value.time) {
-          // Add the new measurement to the beginning of the list
           affluenceLogs.value.unshift({ ...newAffluence.value });
-          
-          // Save to the cloud so everyone sees it
           await saveToCloud();
-          
           adminToastMessage.value = 'Affluence logged to the cloud!';
           setTimeout(() => adminToastMessage.value = '', 3000);
         }
@@ -1345,32 +1327,27 @@
         const log = auditLog.value[idx];
         const artist = artists.value.find(a => a.id === log.artistId);
         
-        // Reverse the points applied by this event
         if (artist) {
           artist.points -= log.delta;
         }
         
-        // Remove the log entry
         auditLog.value.splice(idx, 1);
-        
-        // Sync to cloud
         await saveToCloud();
         
         adminToastMessage.value = `Event deleted and points reversed!`;
         setTimeout(() => adminToastMessage.value = '', 4000);
       };
 
+      // 2. FIXED FETCH FUNCTION
       const loadFromCloud = async () => {
         syncStatus.value = 'Syncing...';
         try {
-          // Read directly from the public raw Gist endpoint (No Token Needed!)
-          const res = await fetch(`${RAW_GIST_URL}?t=${Date.now()}`); // timestamp prevents browser caching
-          
+          const res = await fetch(`${RAW_GIST_URL}?t=${Date.now()}`);
           if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
           const record = await res.json();
 
-          if (record.artists) {
+          if (record && record.artists) {
             artists.value.forEach(localA => {
               const cloudA = record.artists.find(ca => ca.id === localA.id);
               if (cloudA) {
@@ -1401,23 +1378,27 @@
       const checkSelfSelection = () => {
         if (!isIdentityLocked.value || !currentParticipant.value?.isLocked) return;
         
-        // Check if any selected artist's name contains the participant's name
         const hasSelfSelected = currentParticipant.value.roster.some(artistId => {
           const artist = artists.value.find(a => a.id === artistId);
           return artist && artist.name.includes(currentParticipant.value.name);
         });
 
         if (hasSelfSelected) {
-          // Unlock the roster and trigger the cloud save
           currentParticipant.value.isLocked = false;
           showSelfSelectionModal.value = true;
           saveToCloud();
         }
       };
 
+      // 3. FIXED SAVE FUNCTION
       const saveToCloud = async () => {
         if (!isDataLoaded.value) {
           console.warn("Blocked saveToCloud: Initial data has not loaded yet.");
+          return;
+        }
+
+        if (!GITHUB_TOKEN.value) {
+          alert("Please enter and save your GitHub Access Token in the Admin Console first!");
           return;
         }
 
@@ -1430,10 +1411,10 @@
             affluenceLogs: affluenceLogs.value
           };
 
-          await fetch(BASE_URL, {
+          const res = await fetch(BASE_URL, {
             method: 'PATCH',
             headers: {
-              'Authorization': `Bearer ${GITHUB_TOKEN}`,
+              'Authorization': `Bearer ${GITHUB_TOKEN.value}`,
               'Accept': 'application/vnd.github.v3+json',
               'Content-Type': 'application/json'
             },
@@ -1445,6 +1426,8 @@
               }
             })
           });
+
+          if (!res.ok) throw new Error(`Save failed with HTTP ${res.status}`);
           syncStatus.value = 'Synced';
         } catch (e) {
           console.error("Gist save error:", e);
@@ -1453,7 +1436,6 @@
       };
 
       onMounted(() => {
-        // Restore player identity and locked state from localStorage
         const savedUserId = localStorage.getItem('fanta_user_id');
         const savedIdentityLocked = localStorage.getItem('fanta_identity_locked');
 
@@ -1465,9 +1447,10 @@
         }
 
         loadFromCloud();
-        setInterval(loadFromCloud, 30000); // Polling cloud sync every 30s
+        setInterval(loadFromCloud, 30000);
       });
 
+      // 4. FIXED RETURN OBJECT (Includes all missing refs)
       return {
         activeTab, tabs, syncStatus, artists, participants, auditLog,
         selectedParticipantId, isIdentityLocked, isIdentityDropdownOpen,
@@ -1483,7 +1466,8 @@
         showSelfSelectionModal,
         appStats, 
         removeLog, 
-        affluenceLogs, newAffluence, submitAffluence
+        affluenceLogs, newAffluence, submitAffluence,
+        GITHUB_TOKEN, saveToken 
       };
     }
   }).mount('#app');
